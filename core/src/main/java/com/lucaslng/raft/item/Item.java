@@ -1,17 +1,25 @@
 package com.lucaslng.raft.item;
 
-public class Item {
+import java.util.concurrent.atomic.AtomicInteger;
+
+import com.badlogic.gdx.graphics.g3d.Model;
+
+public class Item implements Comparable<Item> {
 	
-	public final int id, stackSize;
+	private static final AtomicInteger ID_GEN = new AtomicInteger();
+
+	public final int id;
 	public final String name, description;
+	public final ItemType type;
+	public final Model model;
 
-	private static int idCounter = 0;
 
-	public Item(String name, String description, int stackSize) {
-		this.id = idCounter++;
+	Item(String name, String description, ItemType type, Model model) {
+		this.id = ID_GEN.getAndIncrement();
 		this.name = name;
 		this.description = description;
-		this.stackSize = stackSize;
+		this.type = type;
+		this.model = model;
 	}
 
 	@Override
@@ -21,6 +29,11 @@ public class Item {
 			return this.id == i.id;
 		}
 		return false;
+	}
+
+	@Override
+	public int compareTo(Item o) {
+		return this.name.compareTo(o.name);
 	}
 
 }

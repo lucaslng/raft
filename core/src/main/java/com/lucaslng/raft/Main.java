@@ -1,12 +1,26 @@
 package com.lucaslng.raft;
 
 import com.badlogic.gdx.Game;
-import com.lucaslng.raft.screen.GameScreen;
+import com.lucaslng.raft.assets.Assets;
+import com.lucaslng.raft.screen.LoadingScreen;
+import com.lucaslng.raft.screen.ScreenManager;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends Game {
+
+    private Assets assets;
+    private ScreenManager screenManager;
+
     @Override
     public void create() {
-        setScreen(new GameScreen());
+        assets = new Assets();
+        screenManager = new ScreenManager(this);
+        screenManager.replace(new LoadingScreen(assets, screenManager));
+    }
+
+    @Override
+    public void dispose() {
+        assets.dispose();
+        screenManager.dispose();
     }
 }

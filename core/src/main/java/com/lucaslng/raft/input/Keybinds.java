@@ -9,5 +9,6 @@ public class Keybinds {
 	public final Keybind moveForward = new Keybind(Keys.W);
 	public final Keybind moveBack = new Keybind(Keys.S);
 	public final Keybind jump = new Keybind(Keys.SPACE);
+	public final Keybind openCrafting = new Keybind(Keys.E);
 	
 }

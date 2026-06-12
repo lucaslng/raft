@@ -10,8 +10,8 @@ public class EventBus {
 		subscribers = new HashMap<>();
 	}
 
-	public <E extends Event> void subscribe(Class<E> eventType, Subscriber<E> observer) {
-		subscribers.computeIfAbsent(eventType, k -> new LinkedList<>()).add((Subscriber<Event>) observer);
+	public <E extends Event> void subscribe(Class<E> eventType, Subscriber<E> subscriber) {
+		subscribers.computeIfAbsent(eventType, k -> new LinkedList<>()).add((Subscriber<Event>) subscriber);
 	}
 
 	public void post(Event event) {

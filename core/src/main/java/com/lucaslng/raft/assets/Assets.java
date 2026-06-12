@@ -1,39 +1,55 @@
 package com.lucaslng.raft.assets;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGeneratorLoader;
+import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader;
+import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader.FreeTypeFontLoaderParameter;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
 public class Assets extends AssetManager {
 
-	private Map<String, FreeTypeFontGenerator> fontGenerators;
-
 	public Assets() {
 		super();
-		load("colormap.png", Texture.class);
-		load("platform.g3db", Model.class);
-		load("debris-wood.g3db", Model.class);
+
+		setLoader(FreeTypeFontGenerator.class, new FreeTypeFontGeneratorLoader(getFileHandleResolver()));
+		setLoader(BitmapFont.class, ".ttf", new FreetypeFontLoader(getFileHandleResolver()));
+		setLoader(BitmapFont.class, ".otf", new FreetypeFontLoader(getFileHandleResolver()));
+
+		load("skin/golden-ui-skin.json", Skin.class);
+		
+		load("models/platform.g3db", Model.class);
+		load("models/debris-wood.g3db", Model.class);
+		load("models/debris-stone.g3db", Model.class);
+		load("models/string.g3db", Model.class);
 
 		load("images/crosshair-normal.png", Texture.class);
+		
+		loadDefaultFont(18, "main18.ttf");
+		loadDefaultFont(36, "mainBig.ttf");
+		loadDefaultFont(100, "title.ttf");
 
-		fontGenerators = new HashMap<>();
-		fontGenerators.put("main", new FreeTypeFontGenerator(Gdx.files.internal("fonts/chinese rocks rg.otf")));
+		load("images/2.png", Texture.class);
+		load("images/3.png", Texture.class);
+
+
+		load("music/The Pirate's Waltz.mp3", Music.class);
+
+		load("models/character-male.g3dj", Model.class);
+		
+		load("models/shark.g3dj", Model.class);
+
 	}
 
-	public BitmapFont generateFont(String font, FreeTypeFontParameter parameter) {
-		return fontGenerators.get(font).generateFont(parameter);
-	}
-
-	public void dispose() {
-		super.dispose();
-		for (FreeTypeFontGenerator fontGenerator : fontGenerators.values())
-			fontGenerator.dispose();
+	private void loadDefaultFont(int size, String name) {
+		FreeTypeFontLoaderParameter param = new FreeTypeFontLoaderParameter();
+		param.fontFileName = "fonts/chinese rocks rg.otf";
+		param.fontParameters.size = size;
+		param.fontParameters.characters = FreeTypeFontGenerator.DEFAULT_CHARS;
+		load(name, BitmapFont.class, param);
 	}
 }

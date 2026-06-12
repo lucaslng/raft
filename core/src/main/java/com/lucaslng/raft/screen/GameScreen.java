@@ -2,23 +2,29 @@ package com.lucaslng.raft.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.Input.Buttons;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
+import com.badlogic.gdx.physics.bullet.collision.ClosestRayResultCallback;
+import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.lucaslng.raft.input.Keybinds;
 import com.lucaslng.raft.rendering.GameRenderer;
 import com.lucaslng.raft.world.World;
+import com.lucaslng.raft.assets.Assets;
 import com.lucaslng.raft.input.InputManager;
 
-public class GameScreen implements Screen {
+class GameScreen implements Screen {
 
 	private World world;
 	private GameRenderer gameRenderer;
 	private PerspectiveCamera cam;
 	private Keybinds keybinds;
 
-	public GameScreen() {
-		world = new World();
+	protected GameScreen(Assets assets, ScreenManager screenManager) {
+		world = new World(assets);
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(),
 				Gdx.graphics.getHeight());
 		cam.position.set(0, 1f, 0f);
@@ -28,7 +34,13 @@ public class GameScreen implements Screen {
 		cam.update();
 		Gdx.input.setInputProcessor(new InputManager());
 		keybinds = new Keybinds();
-		gameRenderer = new GameRenderer();
+		gameRenderer = new GameRenderer(assets, world);
+
+		Music music = assets.get("music/The Pirate's Waltz.mp3", Music.class);
+		music.setVolume(.3f);
+		music.play();
+		music.setLooping(true);
+
 	}
 
 	@Override
@@ -41,6 +53,7 @@ public class GameScreen implements Screen {
 		float sensitivity = 4f;
 		updateCameraRotation(cam, delta, sensitivity);
 
+
 		float speed = .1f;
 		Vector3 camDir = cam.direction.cpy();
 		camDir.y = 0f;
@@ -51,17 +64,23 @@ public class GameScreen implements Screen {
 		if (keybinds.moveForward.isPressed())
 			cam.translate(camDir.cpy().nor().scl(speed));
 		if (keybinds.moveBack.isPressed())
-			cam.translate(camDir.nor().scl(-speed));
+			cam.translate(camDir.cpy().nor().scl(-speed));
+
+		// world.getPlayer().getPosition(cam.position);
+		// world.getPlayer().setRotation(camDir,);
 		cam.update();
 
-		world.update(delta);
-		gameRenderer.render(delta, cam, world);
+
+		world.update(delta, cam);
+
+		gameRenderer.render(delta, cam);
+
 	}
 
 	public void updateCameraRotation(Camera camera, float delta, float sensitivity) {
 		if (!Gdx.input.isCursorCatched())
 			return;
-		
+
 		float scale = delta * sensitivity;
 		float deltaX = -Gdx.input.getDeltaX() * scale;
 		float deltaY = -Gdx.input.getDeltaY() * scale;
@@ -78,6 +97,7 @@ public class GameScreen implements Screen {
 	public void resize(int width, int height) {
 		cam.viewportWidth = width;
 		cam.viewportHeight = height;
+		gameRenderer.resize(width, height);
 	}
 
 	@Override
@@ -94,6 +114,7 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void dispose() {
+		world.dispose();
 		gameRenderer.dispose();
 	}
 

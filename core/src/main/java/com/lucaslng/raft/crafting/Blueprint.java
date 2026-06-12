@@ -6,12 +6,12 @@ import java.util.List;
 
 import com.lucaslng.raft.item.ItemStack;
 
-public class Recipe {
+public class Blueprint {
 
 	public final List<ItemStack> required;
 	public final ItemStack output;
 	
-	public Recipe(ItemStack[] required, ItemStack output) {
+	public Blueprint(ItemStack[] required, ItemStack output) {
 		this.required = Collections.unmodifiableList(Arrays.asList(required));
 		this.output = output;
 	}

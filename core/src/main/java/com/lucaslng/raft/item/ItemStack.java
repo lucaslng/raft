@@ -1,29 +1,17 @@
 package com.lucaslng.raft.item;
 
 public class ItemStack {
-	private final Item item;
-	private int quantity;
+	
+	public final Item item;
+	public final int quantity;
 
 	public ItemStack(Item item, int quantity) {
+		if (item.type != ItemType.STACKABLE)
+			throw new IllegalArgumentException("Item must be stackable.");
+		if (quantity <= 0)
+			throw new IllegalArgumentException("Item quantity cannot be 0 or less.");
+
 		this.item = item;
 		this.quantity = quantity;
-	}
-
-	public void add(int quantity) {
-		this.quantity += quantity; // TODO: check overadd / oversub
-	}
-
-	public void subtract(int quantity) {
-		this.quantity -= quantity;
-	}
-
-	// Getters
-
-	public Item getItem() {
-		return item;
-	}
-
-	public int getQuantity() {
-		return quantity;
 	}
 }
