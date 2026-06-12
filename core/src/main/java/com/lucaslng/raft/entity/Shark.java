@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.*;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody.btRigidBodyConstructionInfo;
+import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.physics.MotionState;
 import com.lucaslng.raft.util.Util;
 
@@ -47,5 +48,9 @@ public class Shark extends Entity {
 	@Override
 	public btRigidBody getBody() {
 		return body;
+	}
+
+	@Override
+	public void onClicked(EventBus events) {
 	}
 }

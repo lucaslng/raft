@@ -4,17 +4,17 @@ import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.Subscriber;
 import com.lucaslng.raft.event.events.HoldableItemRecievedEvent;
 import com.lucaslng.raft.event.events.HotbarIndexEvent;
-import com.lucaslng.raft.item.HoldableItem;
+import com.lucaslng.raft.player.holdable.Holdable;
 
 public class Hotbar {
 	
 	public static final int HOTBAR_SIZE = 8;
 
-	private HoldableItem[] hotbar;
+	private Holdable[] hotbar;
 	private int heldIndex;
 
-	public Hotbar(EventBus events) {
-		hotbar = new HoldableItem[HOTBAR_SIZE];
+	Hotbar(EventBus events) {
+		hotbar = new Holdable[HOTBAR_SIZE];
 		heldIndex = 0;
 
 		events.subscribe(HoldableItemRecievedEvent.class, new Subscriber<HoldableItemRecievedEvent>() {
@@ -32,7 +32,7 @@ public class Hotbar {
 		});
 	}
 
-	public HoldableItem getHeldItem() {
+	public Holdable getHeldItem() {
 		return hotbar[heldIndex];
 	}
 

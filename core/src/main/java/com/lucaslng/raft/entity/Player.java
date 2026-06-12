@@ -55,6 +55,13 @@ public class Player extends Entity {
 	public PlayerStats getStats() {
 		return stats;
 	}
+
+	public Backpack getBackpack() {
+		return backpack;
+	}
+
+	@Override
+	public void onClicked(EventBus events) {}
 	
 }
 

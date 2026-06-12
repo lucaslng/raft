@@ -1,24 +1,24 @@
 package com.lucaslng.raft.entity;
 
+import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.badlogic.gdx.physics.bullet.collision.btConvexHullShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody.btRigidBodyConstructionInfo;
-import com.lucaslng.raft.item.ItemStack;
+import com.lucaslng.raft.event.EventBus;
+import com.lucaslng.raft.event.events.TrashCollectedEvent;
 import com.lucaslng.raft.physics.MotionState;
 import com.lucaslng.raft.util.Util;
 
 public class OceanTrash extends Entity {
 
-	private final ItemStack itemStack;
 	private final Vector2 windDir;
 	private final btRigidBody body;
 
-	public OceanTrash(ItemStack itemStack, Vector2 position, Vector2 windDir) {
-		super(new ModelInstance(itemStack.item.model));
-		this.itemStack = itemStack;
+	public OceanTrash(Model model, Vector2 position, Vector2 windDir) {
+		super(new ModelInstance(model));
 		this.windDir = windDir;
 		transform.setToTranslation(position.x, .2f, position.y);
 
@@ -30,8 +30,6 @@ public class OceanTrash extends Entity {
 		body.setCollisionFlags(body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT);
 		body.userData = this;
 	}
-
-	
 
 	@Override
 	public void update(float delta) {
@@ -45,8 +43,9 @@ public class OceanTrash extends Entity {
 		return body;
 	}
 
-	public ItemStack getItems() {
-		return itemStack;
+	@Override
+	public void onClicked(EventBus events) {
+		events.post(new TrashCollectedEvent(this));
 	}
 
 }

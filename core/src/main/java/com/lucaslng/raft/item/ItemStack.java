@@ -6,8 +6,6 @@ public class ItemStack {
 	public final int quantity;
 
 	public ItemStack(Item item, int quantity) {
-		if (item.type != ItemType.STACKABLE)
-			throw new IllegalArgumentException("Item must be stackable.");
 		if (quantity <= 0)
 			throw new IllegalArgumentException("Item quantity cannot be 0 or less.");
 

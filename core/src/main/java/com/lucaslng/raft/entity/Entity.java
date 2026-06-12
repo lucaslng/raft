@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.utils.Disposable;
+import com.lucaslng.raft.event.EventBus;
 
 public abstract class Entity implements Disposable {
 	
@@ -37,6 +38,8 @@ public abstract class Entity implements Disposable {
 	public ModelInstance getInstance() {
 		return model;
 	}
+
+	abstract public void onClicked(EventBus events);
 
 	abstract public btRigidBody getBody();
 	

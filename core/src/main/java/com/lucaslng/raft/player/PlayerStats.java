@@ -20,9 +20,9 @@ public class PlayerStats {
 		thirst.update(delta);
 
 		if (hunger.isDepleted())
-			health.deplete(.05f);
+			health.deplete(.1f * delta);
 		if (thirst.isDepleted())
-			health.deplete(.05f);
+			health.deplete(.1f * delta);
 
 		if (health.isDepleted()) {
 			events.post(new PlayerDeathEvent());

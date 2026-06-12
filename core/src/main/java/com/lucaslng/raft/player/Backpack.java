@@ -5,7 +5,7 @@ import java.util.Map.Entry;
 
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.Subscriber;
-import com.lucaslng.raft.event.events.TrashCollectedEvent;
+import com.lucaslng.raft.event.events.ItemCollectedEvent;
 import com.lucaslng.raft.item.*;
 
 public class Backpack {
@@ -17,10 +17,10 @@ public class Backpack {
 		backpack = new HashMap<>();
 		sortedBackpack = new ArrayList<>();
 
-		events.subscribe(TrashCollectedEvent.class, new Subscriber<TrashCollectedEvent>() {
+		events.subscribe(ItemCollectedEvent.class, new Subscriber<ItemCollectedEvent>() {
 			@Override
-			public void accept(TrashCollectedEvent event) {
-				backpack.merge(event.oceanTrash.getItems().item, event.oceanTrash.getItems().quantity, Integer::sum);
+			public void accept(ItemCollectedEvent event) {
+				backpack.merge(event.oceanItem.getItems().item, event.oceanItem.getItems().quantity, Integer::sum);
 				rebuildSortedView();
 			}
 		});
@@ -32,8 +32,8 @@ public class Backpack {
 		Collections.sort(sortedBackpack, (a, b) -> Integer.compare(b.getValue(), a.getValue()));
 	}
 
-	public List<Entry<Item, Integer>> getSortedBackpackView() {
-		return sortedBackpack.subList(0, sortedBackpack.size());
+	public Iterable<Entry<Item, Integer>> getSortedBackpackView() {
+		return sortedBackpack;
 	}
 
 }

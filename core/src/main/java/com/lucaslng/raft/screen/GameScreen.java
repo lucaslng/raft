@@ -2,18 +2,16 @@ package com.lucaslng.raft.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.Input.Buttons;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.collision.Ray;
-import com.badlogic.gdx.physics.bullet.collision.ClosestRayResultCallback;
-import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.lucaslng.raft.input.Keybinds;
 import com.lucaslng.raft.rendering.GameRenderer;
 import com.lucaslng.raft.world.World;
 import com.lucaslng.raft.assets.Assets;
+import com.lucaslng.raft.event.EventBus;
+import com.lucaslng.raft.event.events.ToggleInventoryEvent;
 import com.lucaslng.raft.input.InputManager;
 
 class GameScreen implements Screen {
@@ -22,9 +20,12 @@ class GameScreen implements Screen {
 	private GameRenderer gameRenderer;
 	private PerspectiveCamera cam;
 	private Keybinds keybinds;
+	private final EventBus events;
+
 
 	protected GameScreen(Assets assets, ScreenManager screenManager) {
-		world = new World(assets);
+		events = new EventBus();
+		world = new World(assets, events);
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(),
 				Gdx.graphics.getHeight());
 		cam.position.set(0, 1f, 0f);
@@ -34,7 +35,7 @@ class GameScreen implements Screen {
 		cam.update();
 		Gdx.input.setInputProcessor(new InputManager());
 		keybinds = new Keybinds();
-		gameRenderer = new GameRenderer(assets, world);
+		gameRenderer = new GameRenderer(assets, world, events);
 
 		Music music = assets.get("music/The Pirate's Waltz.mp3", Music.class);
 		music.setVolume(.3f);
@@ -69,6 +70,10 @@ class GameScreen implements Screen {
 		// world.getPlayer().getPosition(cam.position);
 		// world.getPlayer().setRotation(camDir,);
 		cam.update();
+
+		if (keybinds.toggleInventory.isKeyJustPressed()) {
+			events.post(new ToggleInventoryEvent());
+		}
 
 
 		world.update(delta, cam);

@@ -12,7 +12,6 @@ import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.assets.Assets;
 import com.lucaslng.raft.entity.*;
 import com.lucaslng.raft.event.EventBus;
-import com.lucaslng.raft.event.events.TrashCollectedEvent;
 import com.lucaslng.raft.item.ItemRegistry;
 import com.lucaslng.raft.physics.PhysicsSystem;
 import com.lucaslng.raft.raft.Raft;
@@ -20,7 +19,6 @@ import com.lucaslng.raft.raft.Raft;
 public class World implements Disposable {
 
 	private final Vector2 windDir;
-
 	private final EventBus events;
 	private final Raft raft;
 	private final Player player;
@@ -32,10 +30,11 @@ public class World implements Disposable {
 	private Entity hoveredEntity;
 
 	private ClosestNotMeRayResultCallback rayResultCallback;
-	public World(Assets assets) {
+
+	public World(Assets assets, EventBus events) {
 		windDir = new Vector2(1f, .8f).nor();
 
-		events = new EventBus();
+		this.events = events;
 		raft = new Raft(assets);
 		shark = new Shark(assets.get("models/shark.g3dj", Model.class), new Vector3(3f, 1f, 0f));
 		player = new Player(assets.get("models/character-male.g3dj", Model.class), new Vector3(0f, 1f, 0f), events);
@@ -46,9 +45,8 @@ public class World implements Disposable {
 
 		rayResultCallback = new ClosestNotMeRayResultCallback(player.getBody());
 
-
 		itemRegistry = new ItemRegistry(assets);
-		trashSystem = new TrashSystem(events, physics, itemRegistry, windDir);
+		trashSystem = new TrashSystem(events, physics, itemRegistry, assets, windDir);
 	}
 
 	public void update(float delta, Camera camera) {
@@ -71,13 +69,17 @@ public class World implements Disposable {
 		if (rayResultCallback.hasHit()) {
 			// System.out.println("hit");
 			btCollisionObject obj = rayResultCallback.getCollisionObject();
-			if (obj.userData instanceof OceanTrash) {
-				OceanTrash t = (OceanTrash) obj.userData;
-				if (Gdx.input.isButtonPressed(Buttons.LEFT)) {
-					events.post(new TrashCollectedEvent(t));
+			Object userData = obj.userData;
+			if (userData instanceof Entity) {
+				hoveredEntity = (Entity) userData;
+
+				if (userData instanceof OceanTrash) {
+					OceanTrash t = (OceanTrash) userData;
+					if (Gdx.input.isButtonPressed(Buttons.LEFT))
+						t.onClicked(events);
 				}
-				hoveredEntity = t;
 			}
+
 		}
 	}
 

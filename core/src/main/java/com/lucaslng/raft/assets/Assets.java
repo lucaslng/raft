@@ -4,6 +4,7 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGeneratorLoader;
 import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader;
@@ -26,6 +27,7 @@ public class Assets extends AssetManager {
 		load("models/debris-wood.g3db", Model.class);
 		load("models/debris-stone.g3db", Model.class);
 		load("models/string.g3db", Model.class);
+		load("models/blueprint.g3db", Model.class);
 
 		load("images/crosshair-normal.png", Texture.class);
 		
@@ -43,6 +45,7 @@ public class Assets extends AssetManager {
 		
 		load("models/shark.g3dj", Model.class);
 
+		load("textures/sprites.atlas", TextureAtlas.class);
 	}
 
 	private void loadDefaultFont(int size, String name) {

@@ -5,6 +5,9 @@ import java.util.*;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.lucaslng.raft.assets.Assets;
+import com.lucaslng.raft.entity.OceanBlueprint;
+import com.lucaslng.raft.entity.OceanItem;
 import com.lucaslng.raft.entity.OceanTrash;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.Subscriber;
@@ -23,11 +26,13 @@ public class TrashSystem {
 
 	private final PhysicsSystem physics;
 	private final ItemRegistry itemRegistry;
+	private final Assets assets;
 	private final Vector2 windDir;
 
-	public TrashSystem(EventBus events, PhysicsSystem physics, ItemRegistry itemRegistry, Vector2 windDir) {
+	public TrashSystem(EventBus events, PhysicsSystem physics, ItemRegistry itemRegistry, Assets assets, Vector2 windDir) {
 		this.physics = physics;
 		this.itemRegistry = itemRegistry;
+		this.assets = assets;
 		this.windDir = windDir;
 
 		events.subscribe(TrashCollectedEvent.class, new Subscriber<TrashCollectedEvent>() {
@@ -64,20 +69,33 @@ public class TrashSystem {
 
 		// Spawn trash
 		if (Math.random() < SPAWN_CHANCE * delta) {
-			String item = "";
-			switch (MathUtils.random(1, 3)) {
-				case 1: item = "Wood"; break;
-				case 2: item = "Stone"; break;
-				case 3: item = "String"; break;
-			}
-			int quantity = MathUtils.random(1, 5);
-			ItemStack items = new ItemStack(itemRegistry.get(item), quantity);
+			// calculate position to spawn at
 			Vector2 perp = new Vector2(-windDir.y, windDir.x); // 90 degrees left
 			Vector2 position = windDir.cpy()
 					.scl(-SPAWN_DIST)
 					.add(perp.scl(MathUtils.random(-SPAWN_DIST, SPAWN_DIST)))
 					.add(playerPosition.x, playerPosition.z);
-			OceanTrash t = new OceanTrash(items, position, windDir);
+			OceanTrash t;
+			if (Math.random() < .1f) {
+				t = new OceanBlueprint(position, windDir, assets);
+			} else {
+				String item = "";
+				switch (MathUtils.random(1, 3)) {
+					case 1:
+						item = "Wood";
+						break;
+					case 2:
+						item = "Stone";
+						break;
+					case 3:
+						item = "String";
+						break;
+				}
+				int quantity = MathUtils.random(1, 5);
+				ItemStack items = new ItemStack(itemRegistry.get(item), quantity);
+				t = new OceanItem(items, position, windDir);
+
+			}
 			trash.add(t);
 			physics.addEntity(t);
 		}

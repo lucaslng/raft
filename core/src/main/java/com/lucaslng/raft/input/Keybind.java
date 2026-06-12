@@ -20,6 +20,10 @@ public class Keybind {
 	public boolean isPressed() {
 		return Gdx.input.isKeyPressed(key);
 	}
+
+	public boolean isKeyJustPressed() {
+		return Gdx.input.isKeyJustPressed(key);
+	}
 	
 	@Override
 	public String toString() {

@@ -10,15 +10,13 @@ public class Item implements Comparable<Item> {
 
 	public final int id;
 	public final String name, description;
-	public final ItemType type;
 	public final Model model;
 
 
-	Item(String name, String description, ItemType type, Model model) {
+	Item(String name, String description, Model model) {
 		this.id = ID_GEN.getAndIncrement();
 		this.name = name;
 		this.description = description;
-		this.type = type;
 		this.model = model;
 	}
 

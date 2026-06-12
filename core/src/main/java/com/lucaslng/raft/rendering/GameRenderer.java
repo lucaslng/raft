@@ -14,6 +14,7 @@ import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.assets.Assets;
 import com.lucaslng.raft.entity.OceanTrash;
+import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.world.World;
 
 public class GameRenderer implements Disposable {
@@ -22,7 +23,6 @@ public class GameRenderer implements Disposable {
 	private final Environment environment = new Environment();
 	private final Environment outlineEnvironment = new Environment();
 	private final SkyboxRenderer skybox = new SkyboxRenderer();
-	private final ShadowRenderer shadow = new ShadowRenderer();
 	private final HUDRenderer hud;
 	private final OceanRenderer ocean;
 	private final ModelBatch modelBatch = new ModelBatch();
@@ -31,9 +31,9 @@ public class GameRenderer implements Disposable {
 	private final World world;
 	private final Iterable<OceanTrash> trash;
 
-	private boolean isDebug = true;
+	private boolean isDebug = false;
 
-	public GameRenderer(Assets assets, World world) {
+	public GameRenderer(Assets assets, World world, EventBus events) {
 		this.assets = assets;
 		this.world = world;
 		this.trash = world.getTrash();
@@ -46,7 +46,7 @@ public class GameRenderer implements Disposable {
 		environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, .54f, -.76f, -.36f));
 		outlineEnvironment.set(new ColorAttribute(ColorAttribute.AmbientLight, Color.WHITE));
 
-		hud = new HUDRenderer(assets);
+		hud = new HUDRenderer(assets, events);
 		ocean = new OceanRenderer(42L);
 
 		debugDraw.setDebugMode(btIDebugDraw.DebugDrawModes.DBG_DrawWireframe);

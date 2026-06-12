@@ -2,6 +2,7 @@ package com.lucaslng.raft.rendering;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -15,7 +16,10 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.lucaslng.raft.assets.Assets;
-import com.lucaslng.raft.player.Backpack;
+import com.lucaslng.raft.event.EventBus;
+import com.lucaslng.raft.event.Subscriber;
+import com.lucaslng.raft.event.events.ToggleInventoryEvent;
+import com.lucaslng.raft.item.Item;
 import com.lucaslng.raft.player.Hotbar;
 import com.lucaslng.raft.player.PlayerStats;
 import com.lucaslng.raft.util.Util;
@@ -23,22 +27,28 @@ import com.lucaslng.raft.world.World;
 
 class HUDRenderer implements Disposable {
 
-	private Stage stage;
-	private Label fpsLabel;
-	private List<Disposable> disposables;
+	private final LabelStyle mainLabelStyle;
 
-	private ProgressBar healthBar, hungerBar, thirstBar;
+	private final Stage stage;
+	private final Label fpsLabel;
+	private final List<Disposable> disposables;
 
-	protected HUDRenderer(Assets assets) {
+	private final ProgressBar healthBar, hungerBar, thirstBar;
+
+	private boolean isInventoryOpen;
+	private final Table inventoryTable;
+
+	protected HUDRenderer(Assets assets, EventBus events) {
 		disposables = new ArrayList<>();
 
 		BitmapFont mainFont = assets.get("main18.ttf", BitmapFont.class);
+		mainLabelStyle = new LabelStyle(mainFont, Color.WHITE);
 
 		stage = new Stage(new ExtendViewport(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight()));
 		disposables.add(stage);
 
 		// fps
-		fpsLabel = new Label("", new LabelStyle(mainFont, Color.WHITE));
+		fpsLabel = new Label("", mainLabelStyle);
 		fpsLabel.addAction(new Action() {
 			@Override
 			public boolean act(float delta) {
@@ -96,6 +106,22 @@ class HUDRenderer implements Disposable {
 		statTable.add(thirstBar);
 		statTable.bottom().left().pad(16);
 		stage.addActor(statTable);
+
+		// inventory
+		inventoryTable = new Table();
+		inventoryTable.setFillParent(true);
+		inventoryTable.top().left().pad(14f);
+		stage.addActor(inventoryTable);
+		inventoryTable.setVisible(isInventoryOpen);
+
+		events.subscribe(ToggleInventoryEvent.class, new Subscriber<ToggleInventoryEvent>() {
+			@Override
+			public void accept(ToggleInventoryEvent event) {
+				isInventoryOpen = !isInventoryOpen;
+				Gdx.input.setCursorCatched(!isInventoryOpen);
+				inventoryTable.setVisible(isInventoryOpen);
+			}
+		});
 	}
 
 	private ProgressBar makeStatBar(Texture bg, Texture fill) {
@@ -113,6 +139,16 @@ class HUDRenderer implements Disposable {
 		healthBar.setValue(stats.getHealth());
     hungerBar.setValue(stats.getHunger());
     thirstBar.setValue(stats.getThirst());
+
+		Iterable<Map.Entry<Item, Integer>> items = world.getPlayer().getBackpack().getSortedBackpackView();
+		inventoryTable.clear();
+		for (Map.Entry<Item, Integer> i : items) {
+			Item item = i.getKey();
+			int quantity = i.getValue();
+			
+			Label label = new Label(item.name + " x" + quantity, mainLabelStyle);
+			inventoryTable.add(label).row();
+		}
 
 		stage.act(delta);
 		stage.draw();
