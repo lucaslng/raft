@@ -30,43 +30,46 @@ public class World implements Disposable {
 	private final Vector2 windDir;
 
 	// ── Core systems ─────────────────────────────────────────────────────────
-	private final EventBus       events;
-	private final PhysicsSystem  physics;
-	private final EntitySystem   entitySystem;
-	private final RaftSystem     raftSystem;
+	private final EventBus events;
+	private final PhysicsSystem physics;
+	private final EntitySystem entitySystem;
+	private final RaftSystem raftSystem;
 	private final PlacementGhost placementGhost;
-	private final ItemRegistry   itemRegistry;
+	private final ItemRegistry itemRegistry;
 	private final BuildingRegistry buildingRegistry;
-	private final TrashSystem    trashSystem;
+	private final TrashSystem trashSystem;
 
 	// ── Convenience references (live inside entitySystem) ────────────────────
 	private final Player player;
-	private final Shark  shark;
+	private final Shark shark;
 
 	// ── Raycast state (updated every frame in checkRaycast) ──────────────────
-	private Entity   hoveredEntity   = null;
+	private Entity hoveredEntity = null;
 	private RaftTile hoveredRaftTile = null;
-	private Vector2  ghostTarget     = null;
+	private Vector2 ghostTarget = null;
 
 	private final ClosestNotMeRayResultCallback rayCallback;
 
+	private float time = .4f; // 0 - 1 : midnight - midnight
+	static public float DAY_LENGTH_SECONDS = 60f;
+
 	public World(Assets assets, EventBus events) {
-		this.events  = events;
+		this.events = events;
 		windDir = new Vector2(1f, .8f).nor();
 
-		physics      = new PhysicsSystem(events);
+		physics = new PhysicsSystem(events);
 		entitySystem = new EntitySystem(physics);
 
 		// ── Raft ────────────────────────────────────────────────────────────
 		Model tileModel = assets.get("models/platform.g3db", Model.class);
-		raftSystem     = new RaftSystem(tileModel, physics, events);
+		raftSystem = new RaftSystem(tileModel, physics, events);
 		placementGhost = new PlacementGhost(tileModel);
 
 		// ── Entities ────────────────────────────────────────────────────────
 		player = new Player(
 				assets.get("models/character-male.g3dj", Model.class),
 				new Vector3(0f, 1f, 0f), events);
-		shark  = new Shark(
+		shark = new Shark(
 				assets.get("models/shark.g3dj", Model.class),
 				new Vector3(3f, 1f, 0f));
 
@@ -77,9 +80,9 @@ public class World implements Disposable {
 		rayCallback = new ClosestNotMeRayResultCallback(player.getBody());
 
 		// ── Items / buildings ────────────────────────────────────────────────
-		itemRegistry     = new ItemRegistry(assets);
+		itemRegistry = new ItemRegistry(assets);
 		buildingRegistry = new BuildingRegistry(assets, events);
-		trashSystem      = new TrashSystem(events, physics, itemRegistry, assets, windDir);
+		trashSystem = new TrashSystem(events, physics, itemRegistry, assets, windDir);
 
 		// Give the player one BuildingItem per registered building.
 		// This is intentionally done here rather than inside BuildingRegistry
@@ -92,6 +95,8 @@ public class World implements Disposable {
 	// ── Per-frame update ─────────────────────────────────────────────────────
 
 	public void update(float delta, Camera camera) {
+		time += delta / DAY_LENGTH_SECONDS;
+		time %= 1f;
 		entitySystem.update(delta);
 		physics.update(delta);
 		raftSystem.update(delta);
@@ -106,16 +111,17 @@ public class World implements Disposable {
 	 * Casts a ray from the camera and updates {@link #hoveredEntity},
 	 * {@link #hoveredRaftTile}, and {@link #ghostTarget}.
 	 *
-	 * <p>Click dispatch is deliberately <em>not</em> here — call
+	 * <p>
+	 * Click dispatch is deliberately <em>not</em> here — call
 	 * {@link #handleLeftClick()} from {@code GameScreen} when the mouse button
 	 * is pressed.
 	 */
 	private void checkRaycast(Camera cam) {
 		rayCallback.setClosestHitFraction(1f);
 		rayCallback.setCollisionObject(null);
-		hoveredEntity   = null;
+		hoveredEntity = null;
 		hoveredRaftTile = null;
-		ghostTarget     = null;
+		ghostTarget = null;
 
 		Vector3 rayEnd = cam.direction.cpy().scl(10f).add(cam.position);
 		physics.rayCast(cam.position, rayEnd, rayCallback);
@@ -125,8 +131,8 @@ public class World implements Disposable {
 			return;
 		}
 
-		btCollisionObject obj      = rayCallback.getCollisionObject();
-		Object            userData = obj.userData;
+		btCollisionObject obj = rayCallback.getCollisionObject();
+		Object userData = obj.userData;
 
 		if (userData instanceof OceanTrash) {
 			hoveredEntity = (OceanTrash) userData;
@@ -158,7 +164,8 @@ public class World implements Disposable {
 		}
 
 		Holdable held = player.getHotbar().getHeldItem();
-		if (held == null) return;
+		if (held == null)
+			return;
 
 		if (held instanceof Hammer && ghostTarget != null) {
 			held.onLeftClick(this);
@@ -171,20 +178,61 @@ public class World implements Disposable {
 
 	// ── Getters ──────────────────────────────────────────────────────────────
 
-	public RaftSystem     getRaftSystem()      { return raftSystem; }
-	public PlacementGhost getPlacementGhost()  { return placementGhost; }
-	public Player         getPlayer()          { return player; }
-	public Shark          getShark()           { return shark; }
-	public EntitySystem   getEntitySystem()    { return entitySystem; }
-	public PhysicsSystem  getPhysics()         { return physics; }
-	public EventBus       getEvents()          { return events; }
-	public BuildingRegistry getBuildingRegistry() { return buildingRegistry; }
-	public Vector2        getWindDir()         { return windDir; }
+	public float getTime() {
+		return time;
+	}
 
-	public Iterable<OceanTrash> getTrash()     { return trashSystem.getTrash(); }
-	public Entity    getHoveredEntity()        { return hoveredEntity; }
-	public RaftTile  getHoveredRaftTile()      { return hoveredRaftTile; }
-	public Vector2   getGhostTarget()          { return ghostTarget; }
+	public RaftSystem getRaftSystem() {
+		return raftSystem;
+	}
+
+	public PlacementGhost getPlacementGhost() {
+		return placementGhost;
+	}
+
+	public Player getPlayer() {
+		return player;
+	}
+
+	public Shark getShark() {
+		return shark;
+	}
+
+	public EntitySystem getEntitySystem() {
+		return entitySystem;
+	}
+
+	public PhysicsSystem getPhysics() {
+		return physics;
+	}
+
+	public EventBus getEvents() {
+		return events;
+	}
+
+	public BuildingRegistry getBuildingRegistry() {
+		return buildingRegistry;
+	}
+
+	public Vector2 getWindDir() {
+		return windDir;
+	}
+
+	public Iterable<OceanTrash> getTrash() {
+		return trashSystem.getTrash();
+	}
+
+	public Entity getHoveredEntity() {
+		return hoveredEntity;
+	}
+
+	public RaftTile getHoveredRaftTile() {
+		return hoveredRaftTile;
+	}
+
+	public Vector2 getGhostTarget() {
+		return ghostTarget;
+	}
 
 	// ── Disposal ─────────────────────────────────────────────────────────────
 

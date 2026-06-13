@@ -20,6 +20,6 @@ void main() {
     v_worldPos = worldPos.xyz;
     v_normal = normalize((u_world * vec4(a_normal, 0.0)).xyz);
     v_uv = a_texCoord0;
-    v_viewDist = length(worldPos.xyz - u_cameraPos);
+    v_viewDist = gl_Position.w;
     gl_Position = u_projView * worldPos;
 }

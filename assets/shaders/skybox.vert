@@ -1,3 +1,7 @@
+#ifdef GL_ES
+precision highp float;
+#endif
+
 attribute vec3 a_position;
 uniform mat4 u_projViewTrans; // projection * view (with no translation)
 varying vec3 v_texCoords;

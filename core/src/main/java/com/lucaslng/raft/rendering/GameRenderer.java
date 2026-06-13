@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.physics.bullet.DebugDrawer;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
@@ -15,20 +16,27 @@ import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.assets.Assets;
 import com.lucaslng.raft.entity.Entity;
 import com.lucaslng.raft.entity.OceanTrash;
+import com.lucaslng.raft.entity.Shark;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.world.World;
 
-
 public class GameRenderer implements Disposable {
 
-	private final Environment   environment        = new Environment();
-	private final Environment   outlineEnvironment = new Environment();
-	private final SkyboxRenderer skybox             = new SkyboxRenderer();
-	private final HUDRenderer   hud;
+	private final Environment environment = new Environment();
+	private final Environment outlineEnvironment = new Environment();
+	private final SkyboxRenderer skybox = new SkyboxRenderer();
+	private final HUDRenderer hud;
 	private final OceanRenderer ocean;
-	private final ModelBatch    modelBatch         = new ModelBatch();
-	private final DebugDrawer   debugDraw          = new DebugDrawer();
-	private final World         world;
+	private final ModelBatch modelBatch = new ModelBatch();
+	private final ModelBatch outlineModelBatch = new ModelBatch();
+	private final DebugDrawer debugDraw = new DebugDrawer();
+	private final World world;
+	private final DirectionalLight sun = new DirectionalLight().setDirection(.54f, -.76f, -.36f);
+
+	private static final Color SUN_NIGHT_COLOR = new Color(0.05f, 0.05f, 0.2f, 1f);
+	private static final Color SUN_DAY_COLOR = new Color(1f, 1f, 0.95f, 1f);
+
+	private final List<ModelInstance> opaque = new ArrayList<>();
 
 	private boolean isDebug = false;
 
@@ -36,10 +44,10 @@ public class GameRenderer implements Disposable {
 		this.world = world;
 
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
-		environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, .54f, -.76f, -.36f));
+		environment.add(sun);
 		outlineEnvironment.set(new ColorAttribute(ColorAttribute.AmbientLight, Color.WHITE));
 
-		hud   = new HUDRenderer(assets, events, world.getBuildingRegistry());
+		hud = new HUDRenderer(assets, events, world.getBuildingRegistry());
 		ocean = new OceanRenderer(42L);
 
 		debugDraw.setDebugMode(btIDebugDraw.DebugDrawModes.DBG_DrawWireframe);
@@ -52,13 +60,18 @@ public class GameRenderer implements Disposable {
 				Gdx.graphics.getBackBufferHeight());
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-		skybox.render(camera);
+		float daylight = MathUtils.sin(world.getTime() * MathUtils.PI2 - MathUtils.PI / 2f);
+		daylight = MathUtils.clamp((daylight + 1f) * 0.5f, 0f, 1f);
+		daylight = (float)Math.pow(daylight, 3f);
+
+		sun.color.set(SUN_NIGHT_COLOR).lerp(SUN_DAY_COLOR, daylight);
+
+		skybox.render(camera, daylight);
 		ocean.render(camera, delta);
 
 		// ── Collect opaque instances ──────────────────────────────────────
-		List<ModelInstance> opaque = new ArrayList<>();
-
 		// All registered entities (player, shark, etc.)
+		opaque.clear();
 		opaque.addAll(world.getEntitySystem().getInstances());
 
 		// Raft tiles + buildings (cached list, no allocation unless dirty)
@@ -79,7 +92,7 @@ public class GameRenderer implements Disposable {
 		modelBatch.end();
 
 		// ── Hovered entity outline ────────────────────────────────────────
-		if (hovered != null) {
+		if (hovered != null && hovered instanceof OceanTrash) {
 			renderOutline(camera, hovered);
 		}
 
@@ -110,6 +123,7 @@ public class GameRenderer implements Disposable {
 
 	private void renderOutline(Camera camera, Entity entity) {
 		ModelInstance mi = entity.getInstance();
+		Matrix4 original = new Matrix4(mi.transform);
 
 		Gdx.gl.glEnable(GL20.GL_STENCIL_TEST);
 		Gdx.gl.glStencilFunc(GL20.GL_ALWAYS, 1, 0xFF);
@@ -125,12 +139,14 @@ public class GameRenderer implements Disposable {
 		Gdx.gl.glStencilMask(0x00);
 		Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
 
-		Matrix4 original = new Matrix4(mi.transform);
-		mi.transform.scale(1.05f, 1.05f, 1.05f);
-		modelBatch.begin(camera);
-		modelBatch.render(mi, outlineEnvironment);
-		modelBatch.end();
-		mi.transform.set(original);
+		try {
+			mi.transform.scale(1.05f, 1.05f, 1.05f);
+			outlineModelBatch.begin(camera);
+			outlineModelBatch.render(mi, outlineEnvironment);
+			outlineModelBatch.end();
+		} finally {
+			mi.transform.set(original);
+		}
 
 		Gdx.gl.glStencilMask(0xFF);
 		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);

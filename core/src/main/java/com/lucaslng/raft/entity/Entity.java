@@ -57,6 +57,5 @@ public abstract class Entity implements Disposable {
 
 	@Override
 	public void dispose() {
-		getBody().dispose();
 	}
 }

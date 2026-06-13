@@ -1,8 +1,10 @@
 #ifdef GL_ES
-precision mediump float;
+precision highp float;
 #endif
 
-uniform samplerCube u_cubemap;
+uniform samplerCube u_dayCubemap;
+uniform samplerCube u_nightCubemap;
+uniform float u_daylight;
 
 uniform vec3  u_fogColor;          // base horizon/atmosphere colour
 uniform vec3  u_fogSunColor;       // warm sun-glow colour near the sun disc
@@ -14,7 +16,9 @@ varying vec3 v_texCoords;
 varying vec3 v_direction;
 
 void main() {
-  vec4 skyColor = textureCube(u_cubemap, v_texCoords);
+  vec4 dayColor = textureCube(u_dayCubemap, v_texCoords);
+  vec4 nightColor = textureCube(u_nightCubemap, v_texCoords);
+  vec4 skyColor = mix(nightColor, dayColor, u_daylight);
   vec3 dir      = normalize(v_direction);
 
   float elevation = dir.y;

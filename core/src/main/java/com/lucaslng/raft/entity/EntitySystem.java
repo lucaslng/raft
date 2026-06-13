@@ -1,35 +1,39 @@
 package com.lucaslng.raft.entity;
 
+import java.util.*;
+
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.physics.PhysicsSystem;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 /**
  * Central registry for all live {@link Entity} instances.
  *
- * <p>Responsibilities:
+ * <p>
+ * Responsibilities:
  * <ul>
- *   <li>Add / remove entities while safely iterating (pending-add / pending-remove queues).</li>
- *   <li>Drive the per-frame {@link Entity#update(float)} loop.</li>
- *   <li>Provide a typed view of all model instances for the renderer.</li>
- *   <li>Dispose and remove from physics on entity death.</li>
+ * <li>Add / remove entities while safely iterating (pending-add /
+ * pending-remove queues).</li>
+ * <li>Drive the per-frame {@link Entity#update(float)} loop.</li>
+ * <li>Provide a typed view of all model instances for the renderer.</li>
+ * <li>Dispose and remove from physics on entity death.</li>
  * </ul>
  *
- * <p>This replaces the separate {@code player}, {@code shark}, and {@code trashSystem}
- * entity management spread across {@code World}. Adding a new entity type (e.g. a
+ * <p>
+ * This replaces the separate {@code player}, {@code shark}, and
+ * {@code trashSystem}
+ * entity management spread across {@code World}. Adding a new entity type (e.g.
+ * a
  * destination buoy, a swimming player state) requires no changes here — just
  * {@code entitySystem.add(newEntity)}.
  */
 public class EntitySystem implements Disposable {
 
-	private final List<Entity> entities    = new ArrayList<>();
-	private final List<Entity> toAdd       = new ArrayList<>();
-	private final List<Entity> toRemove    = new ArrayList<>();
+	private final List<Entity> entities = new ArrayList<>();
+	private final List<Entity> toAdd = new ArrayList<>();
+	private final List<Entity> toRemove = new ArrayList<>();
+	private final ArrayList<ModelInstance> out = new ArrayList<>();
 
 	private final PhysicsSystem physics;
 
@@ -42,7 +46,10 @@ public class EntitySystem implements Disposable {
 		toAdd.add(entity);
 	}
 
-	/** Schedules an entity to be removed and disposed at the start of the next {@link #update}. */
+	/**
+	 * Schedules an entity to be removed and disposed at the start of the next
+	 * {@link #update}.
+	 */
 	public void remove(Entity entity) {
 		entity.kill();
 		toRemove.add(entity);
@@ -85,10 +92,12 @@ public class EntitySystem implements Disposable {
 	 * Returns all live model instances — used by the renderer to build the
 	 * opaque draw list.
 	 */
-	public List<ModelInstance> getInstances() {
-		List<ModelInstance> out = new ArrayList<>(entities.size());
+	public Collection<ModelInstance> getInstances() {
+		out.clear();
+		out.ensureCapacity(entities.size());
 		for (Entity e : entities) {
-			if (e.getInstance() != null) out.add(e.getInstance());
+			if (e.getInstance() != null)
+				out.add(e.getInstance());
 		}
 		return out;
 	}
@@ -97,7 +106,8 @@ public class EntitySystem implements Disposable {
 	@SuppressWarnings("unchecked")
 	public <T extends Entity> T getFirst(Class<T> type) {
 		for (Entity e : entities) {
-			if (type.isInstance(e)) return (T) e;
+			if (type.isInstance(e))
+				return (T) e;
 		}
 		return null;
 	}
