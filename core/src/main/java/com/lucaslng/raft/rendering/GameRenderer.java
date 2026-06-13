@@ -73,8 +73,6 @@ public class GameRenderer implements Disposable {
 		opaque.addAll(world.getEntitySystem().getInstances());
 		opaque.addAll(world.getRaftSystem().getInstances());
 
-		ModelInstance hovered = world.getHoveredOutlineInstance();
-
 		modelBatch.begin(camera);
 		modelBatch.render(opaque, environment);
 

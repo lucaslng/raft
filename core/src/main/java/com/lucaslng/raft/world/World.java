@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.ClosestNotMeRayResultCallback;
-import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.assets.Assets;
 import com.lucaslng.raft.building.Building;
