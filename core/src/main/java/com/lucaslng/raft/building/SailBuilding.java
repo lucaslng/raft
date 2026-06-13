@@ -163,4 +163,9 @@ public class SailBuilding extends Building {
 		float deg = MathUtils.radiansToDegrees * MathUtils.atan2(dir.x, dir.y);
 		return (deg + 360f) % 360f;
 	}
+
+	@Override
+	public String getInteractHint() {
+		return "[RMB] Control sail";
+	}
 }

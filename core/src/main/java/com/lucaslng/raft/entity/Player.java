@@ -68,4 +68,9 @@ public class Player extends Entity {
 
 	@Override
 	public void onClick(EventBus events) {}
+
+	@Override
+	public String getInteractHint() {
+		return "";
+	}
 }

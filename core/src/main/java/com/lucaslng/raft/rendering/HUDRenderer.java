@@ -31,6 +31,7 @@ import com.lucaslng.raft.player.holdable.Hammer;
 import com.lucaslng.raft.player.holdable.Holdable;
 import com.lucaslng.raft.raft.RaftTile;
 import com.lucaslng.raft.util.Util;
+import com.lucaslng.raft.world.Clickable;
 import com.lucaslng.raft.world.World;
 
 /**
@@ -206,7 +207,7 @@ class HUDRenderer implements Disposable {
 
 			if (tile == null) {
 				hintLabel.setStyle(yellowStyle);
-				hintLabel.setText(item.getName() + " — aim at an empty raft tile");
+				hintLabel.setText(item.getName() + " - aim at an empty raft tile");
 			} else if (tile.hasBuilding()) {
 				hintLabel.setStyle(yellowStyle);
 				hintLabel.setText("Tile occupied: " + tile.getBuilding().getName());
@@ -218,7 +219,8 @@ class HUDRenderer implements Disposable {
 			}
 
 		} else {
-			hintLabel.setText("");
+			Clickable hoveredClickable = world.getHoveredClickable();
+			hintLabel.setText(hoveredClickable != null ? hoveredClickable.getInteractHint() : "");
 		}
 
 		// ── Inventory list ─────────────────────────────────────────────────

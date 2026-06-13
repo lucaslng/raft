@@ -19,6 +19,7 @@ public class OceanTrash extends Entity implements Outlineable {
 	private final btRigidBody body;
 	private final btConvexHullShape shape; // kept for disposal
 	private final MotionState motionState; // kept for disposal
+	private final String hint = "[LMB] Collect trash";
 
 	public OceanTrash(Model model, Vector2 position, Vector2 windDir) {
 		super(new ModelInstance(model));
@@ -66,5 +67,10 @@ public class OceanTrash extends Entity implements Outlineable {
 	@Override
 	public ModelInstance getOutlineInstance() {
 		return model;
+	}
+
+	@Override
+	public String getInteractHint() {
+		return hint;
 	}
 }

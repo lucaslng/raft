@@ -54,7 +54,7 @@ public class WaterFilter extends Building {
 
     @Override
     public void onClick(EventBus events) {
-        events.post(new StatChangeEvent(0f, 0f, timer * THIRST_RESTORE_PER_SEC));
+        events.post(new StatChangeEvent(0f, 0f, getRestoreValue()));
         timer = 0f;
     }
 
@@ -63,5 +63,14 @@ public class WaterFilter extends Building {
         body.dispose();
         shape.dispose();
         motionState.dispose();
+    }
+
+    @Override
+    public String getInteractHint() {
+        return String.format("[RMB] Restore %d%% thirst", Math.round(getRestoreValue() * 100f));
+    }
+
+    private float getRestoreValue() {
+        return timer * THIRST_RESTORE_PER_SEC;
     }
 }

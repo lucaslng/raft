@@ -64,4 +64,9 @@ public class Shark extends Entity {
 		for (Disposable d : disposables)
 			d.dispose();
 	}
+
+	@Override
+	public String getInteractHint() {
+		return "Get away!";
+	}
 }

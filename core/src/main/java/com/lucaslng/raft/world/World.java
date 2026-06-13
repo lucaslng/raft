@@ -245,6 +245,10 @@ public class World implements Disposable {
 		return hoveredRaftTile;
 	}
 
+	public Clickable getHoveredClickable() {
+		return hoveredClickable;
+	}
+
 	public Vector2 getGhostTarget() {
 		return ghostTarget;
 	}
