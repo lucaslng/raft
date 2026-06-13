@@ -31,7 +31,9 @@ public class Assets extends AssetManager {
 		load("models/debris-stone.g3db", Model.class);
 		load("models/string.g3db", Model.class);
 		load("models/blueprint.g3db", Model.class);
+		load("models/cauliflower.g3db", Model.class);
 
+		// crosshair
 		load("images/crosshair-normal.png", Texture.class);
 		
 		// fonts
@@ -58,6 +60,7 @@ public class Assets extends AssetManager {
 		load("models/platform.g3db", Model.class);
 		load("models/water-filter/water-filter.g3dj", Model.class);
 		load("models/sail/sail.g3dj", Model.class);
+		load("models/pot.g3db", Model.class);
 
 		// sfx
 		load("sfx/tile-placed.mp3", Sound.class);

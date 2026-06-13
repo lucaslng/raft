@@ -12,12 +12,17 @@ public class ItemRegistry {
 
 	public ItemRegistry(Assets assets) {
 		registry = new HashMap<>();
-		registry.put("Wood", new Item("Wood", "A floating wood plank.", assets.get("models/debris-wood.g3db", Model.class)));
-		registry.put("Stone", new Item("Stone", "A few rocks", assets.get("models/debris-stone.g3db", Model.class)));
+		put("Wood", "A floating wood plank.", assets.get("models/debris-wood.g3db", Model.class));
+		put("Stone", "A few rocks", assets.get("models/debris-stone.g3db", Model.class));
 
 		Model stringModel = assets.get("models/string.g3db", Model.class);
 		Util.scaleModel(stringModel, .4f);
-		registry.put("String", new Item("String", "A short piece of rope", stringModel));
+		put("String", "A short piece of rope", stringModel);
+		put("Cauliflower", "A raw, dirty piece of cauliflower", assets.get("models/cauliflower.g3db"));
+	}
+
+	private void put(String name, String description, Model model) {
+		registry.put(name, new Item(name, description, model));
 	}
 
 	public Item get(String itemName) {

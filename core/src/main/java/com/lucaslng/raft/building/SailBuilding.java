@@ -123,7 +123,7 @@ public class SailBuilding extends Building {
 	 */
 	@Override
 	public void onClick(EventBus events) {
-		events.post(new BuildingClickedEvent(this));
+		super.onClick(events);
 		events.post(new PanelOpenedEvent(new SailPanel(this, events)));
 	}
 

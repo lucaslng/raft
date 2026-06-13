@@ -15,6 +15,8 @@ import com.lucaslng.raft.building.BuildingRegistry;
 import com.lucaslng.raft.entity.*;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.events.HoldableItemRecievedEvent;
+import com.lucaslng.raft.event.events.ItemCollectedEvent;
+import com.lucaslng.raft.event.events.TrashCollectedEvent;
 import com.lucaslng.raft.item.ItemRegistry;
 import com.lucaslng.raft.physics.PhysicsSystem;
 import com.lucaslng.raft.player.holdable.BuildingItem;
@@ -98,13 +100,15 @@ public class World implements Disposable {
 		// BuildingRegistry now receives raftSystem + windDir so the Sail can
 		// steer the raft independently of wind.
 		itemRegistry = new ItemRegistry(assets);
-		buildingRegistry = new BuildingRegistry(assets, events, raftSystem, windDir);
+		buildingRegistry = new BuildingRegistry(assets, events, this);
 		trashSystem = new TrashSystem(events, physics, itemRegistry, assets, windDir);
 
 		// Give the player one BuildingItem per registered building.
 		for (String name : buildingRegistry.getNames()) {
 			events.post(new HoldableItemRecievedEvent(new BuildingItem(name)));
 		}
+
+		player.getBackpack().add(itemRegistry.get("Cauliflower"), 100);
 	}
 
 	// ── Per-frame update ─────────────────────────────────────────────────────

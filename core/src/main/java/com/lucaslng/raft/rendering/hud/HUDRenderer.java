@@ -77,8 +77,11 @@ public class HUDRenderer implements Disposable {
 
 	private final Table panelTable = new Table(skin);
 
-	public HUDRenderer(Assets assets, EventBus events, BuildingRegistry buildingRegistry) {
-		this.buildingRegistry = buildingRegistry;
+	private final World world;
+
+	public HUDRenderer(Assets assets, EventBus events, World world) {
+		this.buildingRegistry = world.getBuildingRegistry();
+		this.world = world;
 
 		BitmapFont font = assets.get("main42.ttf", BitmapFont.class);
 		LabelStyle whiteStyle = new LabelStyle(font, Color.WHITE);
@@ -98,10 +101,16 @@ public class HUDRenderer implements Disposable {
 		Texture sliderKnob = Util.generateTexture(
 				Color.WHITE, 16);
 
+		Texture barFg = Util.generateTexture(new Color(0.3f, 0.3f, 0.3f, 1f), 16);
+		Texture barBg = Util.generateTexture(Color.WHITE, 16);
+		
+
 		disposables.add(buttonUp);
 		disposables.add(buttonDown);
 		disposables.add(sliderBg);
 		disposables.add(sliderKnob);
+		disposables.add(barBg);
+		disposables.add(barFg);
 
 		TextButtonStyle buttonStyle = new TextButtonStyle();
 		buttonStyle.up = new TextureRegionDrawable(buttonUp);
@@ -112,6 +121,10 @@ public class HUDRenderer implements Disposable {
 		sliderStyle.background = new TextureRegionDrawable(sliderBg);
 		sliderStyle.knob = new TextureRegionDrawable(sliderKnob);
 
+		ProgressBarStyle barStyle = new ProgressBarStyle();
+		barStyle.background = new TextureRegionDrawable(barBg);
+		barStyle.knobBefore = new TextureRegionDrawable(barFg);
+
 		skin.add("white", whiteStyle);
 		skin.add("default", whiteStyle);
 		skin.add("green", greenStyle);
@@ -119,6 +132,7 @@ public class HUDRenderer implements Disposable {
 		skin.add("yellow", yellowStyle);
 		skin.add("default", buttonStyle);
 		skin.add("default-horizontal", sliderStyle);
+		skin.add("default-horizontal", barStyle);
 
 		stage = new Stage(new ExtendViewport(
 				Gdx.graphics.getBackBufferWidth(),
@@ -150,18 +164,18 @@ public class HUDRenderer implements Disposable {
 		stage.addActor(hintContainer);
 
 		// ── Stat bars ─────────────────────────────────────────────────────
-		Texture barBg = Util.generateTexture(Color.BROWN, 20);
+		Texture statBarBg = Util.generateTexture(Color.BROWN, 20);
 		Texture healthFill = Util.generateTexture(new Color(0.85f, 0.15f, 0.15f, 1f), 20);
 		Texture hungerFill = Util.generateTexture(new Color(0.90f, 0.65f, 0.10f, 1f), 20);
 		Texture thirstFill = Util.generateTexture(new Color(0.20f, 0.55f, 0.90f, 1f), 20);
-		disposables.add(barBg);
+		disposables.add(statBarBg);
 		disposables.add(healthFill);
 		disposables.add(hungerFill);
 		disposables.add(thirstFill);
 
-		healthBar = makeStatBar(barBg, healthFill);
-		hungerBar = makeStatBar(barBg, hungerFill);
-		thirstBar = makeStatBar(barBg, thirstFill);
+		healthBar = makeStatBar(statBarBg, healthFill);
+		hungerBar = makeStatBar(statBarBg, hungerFill);
+		thirstBar = makeStatBar(statBarBg, thirstFill);
 
 		Table statTable = new Table();
 		statTable.setFillParent(true);
@@ -202,7 +216,7 @@ public class HUDRenderer implements Disposable {
 			if (event.panel != null) {
 				panelTable.clear();
 				panelTable.setVisible(true);
-				event.panel.populate(panelTable);
+				event.panel.populate(panelTable, world);
 				Gdx.input.setCursorCatched(false);
 			} else {
 				panelTable.setVisible(false);
@@ -214,7 +228,7 @@ public class HUDRenderer implements Disposable {
 
 	// ── Per-frame render ─────────────────────────────────────────────────────
 
-	public void render(World world, float delta) {
+	public void render(float delta) {
 		// ── Stat bars ──────────────────────────────────────────────────────
 		PlayerStats stats = world.getPlayer().getStats();
 		healthBar.setValue(stats.getHealth());

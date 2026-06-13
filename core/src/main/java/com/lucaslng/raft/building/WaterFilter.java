@@ -15,62 +15,63 @@ import com.lucaslng.raft.util.Util;
 
 public class WaterFilter extends Building {
 
-    public static final float THIRST_RESTORE_PER_SEC = .01f;
+  public static final float THIRST_RESTORE_PER_SEC = .01f;
 
-    private final btRigidBody body;
-    private final btBoxShape shape;
-    private final MotionState motionState;
+  private final btRigidBody body;
+  private final btBoxShape shape;
+  private final MotionState motionState;
 
-    private float timer = 0f;
+  private float timer = 0f;
 
-    public WaterFilter(Model model, EventBus events) {
-        super(new ModelInstance(model));
+  public WaterFilter(Model model, EventBus events) {
+    super(new ModelInstance(model));
 
-        Vector3 dimensions = Util.getDimensions(this.model);
-         shape = new btBoxShape(dimensions);
-        motionState = new MotionState(this.model.transform, dimensions.y);
-        btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(1f, motionState, shape);
-        body = new btRigidBody(info);
-        info.dispose();
-        body.setCollisionFlags(body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT);
-        body.setActivationState(Collision.DISABLE_DEACTIVATION);
-        body.userData = this;
-    }
+    Vector3 dimensions = Util.getDimensions(this.model);
+    shape = new btBoxShape(dimensions);
+    motionState = new MotionState(this.model.transform, dimensions.y);
+    btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(1f, motionState, shape);
+    body = new btRigidBody(info);
+    info.dispose();
+    body.setCollisionFlags(body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT);
+    body.setActivationState(Collision.DISABLE_DEACTIVATION);
+    body.userData = this;
+  }
 
-    @Override
-    public void update(float delta) {
-        timer += delta;
-    }
+  @Override
+  public void update(float delta) {
+    timer += delta;
+  }
 
-    @Override
-    public String getName() {
-        return "Water Filter";
-    }
+  @Override
+  public String getName() {
+    return "Water Filter";
+  }
 
-    @Override
-    public btRigidBody getBody() {
-        return body;
-    }
+  @Override
+  public btRigidBody getBody() {
+    return body;
+  }
 
-    @Override
-    public void onClick(EventBus events) {
-        events.post(new StatChangeEvent(0f, 0f, getRestoreValue()));
-        timer = 0f;
-    }
+  @Override
+  public void onClick(EventBus events) {
+    super.onClick(events);
+    events.post(new StatChangeEvent(0f, 0f, getRestoreValue()));
+    timer = 0f;
+  }
 
-    @Override
-    public void dispose() {
-        body.dispose();
-        shape.dispose();
-        motionState.dispose();
-    }
+  @Override
+  public void dispose() {
+    body.dispose();
+    shape.dispose();
+    motionState.dispose();
+  }
 
-    @Override
-    public String getInteractHint() {
-        return String.format("[RMB] Restore %d%% thirst", Math.round(getRestoreValue() * 100f));
-    }
+  @Override
+  public String getInteractHint() {
+    return String.format("[RMB] Restore %d%% thirst", Math.round(getRestoreValue() * 100f));
+  }
 
-    private float getRestoreValue() {
-        return timer * THIRST_RESTORE_PER_SEC;
-    }
+  private float getRestoreValue() {
+    return timer * THIRST_RESTORE_PER_SEC;
+  }
 }

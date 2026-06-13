@@ -11,13 +11,12 @@ import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
 import com.badlogic.gdx.graphics.g3d.model.Node;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.lucaslng.raft.assets.Assets;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.player.holdable.BuildingItem;
-import com.lucaslng.raft.raft.RaftSystem;
 import com.lucaslng.raft.util.Util;
+import com.lucaslng.raft.world.World;
 
 /**
  * Central registry of all buildable structures.
@@ -38,7 +37,7 @@ public class BuildingRegistry {
 	private final Map<String, Supplier<Building>> factories = new HashMap<>();
 	private final Map<String, Map<String, Integer>> costs = new HashMap<>();
 
-	public BuildingRegistry(Assets assets, EventBus events, RaftSystem raftSystem, Vector2 windDir) {
+	public BuildingRegistry(Assets assets, EventBus events, World world) {
 		// ── Water Filter ──────────────────────────────────────────────────────
 		Model waterFilterModel = assets.get("models/water-filter/water-filter.g3dj", Model.class);
 		Util.scaleModel(waterFilterModel, .006f);
@@ -59,8 +58,11 @@ public class BuildingRegistry {
 		}
 		register(
 				SailBuilding.NAME,
-				() -> new SailBuilding(sailModel, raftSystem, windDir, events),
+				() -> new SailBuilding(sailModel, world.getRaftSystem(), world.getWindDir(), events),
 				Map.of()); // TODO
+
+		Model cookingPotModel = assets.get("models/pot.g3db", Model.class);
+		register("Cooking Pot", () -> new CookingPot(cookingPotModel, events), Map.of());
 	}
 
 	private void register(String name, Supplier<Building> factory, Map<String, Integer> cost) {

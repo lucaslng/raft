@@ -23,12 +23,16 @@ public class Backpack {
 		events.subscribe(ItemCollectedEvent.class, new Subscriber<ItemCollectedEvent>() {
 			@Override
 			public void accept(ItemCollectedEvent event) {
-				Item item = event.oceanItem.getItems().item;
-				backpack.merge(item, event.oceanItem.getItems().quantity, Integer::sum);
-				nameIndex.putIfAbsent(item.name, item);
-				rebuildSortedView();
+				ItemStack items = event.oceanItem.getItems();
+				add(items.item, items.quantity);
 			}
 		});
+	}
+
+	public void add(Item item, int quantity) {
+		backpack.merge(item, quantity, Integer::sum);
+		nameIndex.putIfAbsent(item.name, item);
+		rebuildSortedView();
 	}
 
 	public int getCount(String itemName) {

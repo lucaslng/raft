@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.event.EventBus;
+import com.lucaslng.raft.event.events.BuildingClickedEvent;
 import com.lucaslng.raft.world.Clickable;
 import com.lucaslng.raft.world.Outlineable;
 import com.lucaslng.raft.world.World;
@@ -62,6 +63,11 @@ public abstract class Building implements Disposable, Clickable, Outlineable {
 
 	public ModelInstance getInstance() {
 		return model;
+	}
+
+	@Override
+	public void onClick(EventBus events) {
+		events.post(new BuildingClickedEvent(this));
 	}
 
 	/**

@@ -7,6 +7,7 @@ import com.lucaslng.raft.building.SailBuilding;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.events.PanelOpenedEvent;
 import com.lucaslng.raft.event.events.SailSteerEvent;
+import com.lucaslng.raft.world.World;
 
 public class SailPanel implements Panel {
 
@@ -19,7 +20,7 @@ public class SailPanel implements Panel {
 	}
 
 	@Override
-	public void populate(Table table) {
+	public void populate(Table table, World world) {
 		Skin skin = table.getSkin();
 
 		float windDeg = SailBuilding.toDeg(sail.getWindDir());

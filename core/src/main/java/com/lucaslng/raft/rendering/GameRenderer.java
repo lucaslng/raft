@@ -47,7 +47,7 @@ public class GameRenderer implements Disposable {
 		environment.add(sun);
 		outlineEnvironment.set(new ColorAttribute(ColorAttribute.AmbientLight, Color.WHITE));
 
-		hud = new HUDRenderer(assets, events, world.getBuildingRegistry());
+		hud = new HUDRenderer(assets, events, world);
 		ocean = new OceanRenderer(42L);
 
 		debugDraw.setDebugMode(btIDebugDraw.DebugDrawModes.DBG_DrawWireframe);
@@ -99,7 +99,7 @@ public class GameRenderer implements Disposable {
 		// ── Underwater tint ───────────────────────────────────────────────
 		underwaterRenderer.renderIfSubmerged(camera.position.y);
 
-		hud.render(world, delta);
+		hud.render(delta);
 	}
 
 	public void resize(int width, int height) {

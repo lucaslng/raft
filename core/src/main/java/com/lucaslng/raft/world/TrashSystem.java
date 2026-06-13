@@ -27,7 +27,7 @@ public class TrashSystem {
 	private static final float  SPAWN_CHANCE      = 0.9f; // expected spawns per second
 	private static final float  BLUEPRINT_CHANCE  = 0.1f; // fraction of spawns that are blueprints
 
-	private static final String[] ITEM_TYPES = {"Wood", "Stone", "String"};
+	private static final String[] ITEM_TYPES = {"Wood", "Stone", "String", "Cauliflower"};
 
 	private final List<OceanTrash> trash = new ArrayList<>();
 
