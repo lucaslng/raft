@@ -1,7 +1,5 @@
 package com.lucaslng.raft.world;
 
-import java.util.*;
-
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -10,92 +8,84 @@ import com.lucaslng.raft.entity.OceanBlueprint;
 import com.lucaslng.raft.entity.OceanItem;
 import com.lucaslng.raft.entity.OceanTrash;
 import com.lucaslng.raft.event.EventBus;
-import com.lucaslng.raft.event.Subscriber;
 import com.lucaslng.raft.event.events.TrashCollectedEvent;
 import com.lucaslng.raft.item.ItemRegistry;
 import com.lucaslng.raft.item.ItemStack;
 import com.lucaslng.raft.physics.PhysicsSystem;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+/**
+ * Spawns, updates, and despawns ocean debris.
+ */
 public class TrashSystem {
 
-	static final float SPAWN_DIST = 40f;
-	static final float DESPAWN_DIST = SPAWN_DIST * SPAWN_DIST * 4f;
-	static final private float SPAWN_CHANCE = .9f; // roughly avg spawns per second
+	private static final float  SPAWN_RADIUS      = 40f;
+	private static final float  DESPAWN_RADIUS_SQ = (SPAWN_RADIUS * 2f) * (SPAWN_RADIUS * 2f);
+	private static final float  SPAWN_CHANCE      = 0.9f; // expected spawns per second
+	private static final float  BLUEPRINT_CHANCE  = 0.1f; // fraction of spawns that are blueprints
 
-	private List<OceanTrash> trash = new ArrayList<>();
+	private static final String[] ITEM_TYPES = {"Wood", "Stone", "String"};
+
+	private final List<OceanTrash> trash = new ArrayList<>();
 
 	private final PhysicsSystem physics;
-	private final ItemRegistry itemRegistry;
-	private final Assets assets;
-	private final Vector2 windDir;
+	private final ItemRegistry  itemRegistry;
+	private final Assets        assets;
+	private final Vector2       windDir;
 
-	public TrashSystem(EventBus events, PhysicsSystem physics, ItemRegistry itemRegistry, Assets assets, Vector2 windDir) {
-		this.physics = physics;
+	public TrashSystem(EventBus events, PhysicsSystem physics,
+	                   ItemRegistry itemRegistry, Assets assets, Vector2 windDir) {
+		this.physics      = physics;
 		this.itemRegistry = itemRegistry;
-		this.assets = assets;
-		this.windDir = windDir;
+		this.assets       = assets;
+		this.windDir      = windDir;
 
-		events.subscribe(TrashCollectedEvent.class, new Subscriber<TrashCollectedEvent>() {
-			@Override
-			public void accept(TrashCollectedEvent event) {
-				OceanTrash t = event.oceanTrash;
+		events.subscribe(TrashCollectedEvent.class, event -> {
+			OceanTrash t = event.oceanTrash;
+			if (trash.remove(t)) {
 				physics.removeEntity(t);
 				t.dispose();
-				trash.remove(t);
 			}
 		});
 	}
 
-	public void update(float delta, Vector3 playerPosition) {
-		// Iterate over all trash
-		Iterator<OceanTrash> iterator = trash.iterator();
-		while (iterator.hasNext()) {
-			OceanTrash t = iterator.next();
-
-			// Remove trash out of range, else update it
-			float tx = t.getPosition().x;
-			float tz = t.getPosition().z;
-			float dx = tx - playerPosition.x;
-			float dz = tz - playerPosition.z;
-			float distSquared = dx * dx + dz * dz;
-			if (distSquared > DESPAWN_DIST) {
+	public void update(float delta, Vector3 playerPos) {
+		// ── Despawn out-of-range trash ────────────────────────────────────
+		Iterator<OceanTrash> it = trash.iterator();
+		while (it.hasNext()) {
+			OceanTrash t  = it.next();
+			Vector3    tp = t.getPosition();
+			float dx = tp.x - playerPos.x;
+			float dz = tp.z - playerPos.z;
+			if (dx * dx + dz * dz > DESPAWN_RADIUS_SQ) {
 				physics.removeEntity(t);
 				t.dispose();
-				iterator.remove();
+				it.remove();
 			} else {
 				t.update(delta);
 			}
 		}
 
-		// Spawn trash
+		// ── Spawn new trash ───────────────────────────────────────────────
 		if (Math.random() < SPAWN_CHANCE * delta) {
-			// calculate position to spawn at
-			Vector2 perp = new Vector2(-windDir.y, windDir.x); // 90 degrees left
-			Vector2 position = windDir.cpy()
-					.scl(-SPAWN_DIST)
-					.add(perp.scl(MathUtils.random(-SPAWN_DIST, SPAWN_DIST)))
-					.add(playerPosition.x, playerPosition.z);
-			OceanTrash t;
-			if (Math.random() < .1f) {
-				t = new OceanBlueprint(position, windDir, assets);
-			} else {
-				String item = "";
-				switch (MathUtils.random(1, 3)) {
-					case 1:
-						item = "Wood";
-						break;
-					case 2:
-						item = "Stone";
-						break;
-					case 3:
-						item = "String";
-						break;
-				}
-				int quantity = MathUtils.random(1, 5);
-				ItemStack items = new ItemStack(itemRegistry.get(item), quantity);
-				t = new OceanItem(items, position, windDir);
+			Vector2 perp     = new Vector2(-windDir.y, windDir.x); // perpendicular
+			Vector2 spawnPos = windDir.cpy()
+					.scl(-SPAWN_RADIUS)
+					.add(perp.scl(MathUtils.random(-SPAWN_RADIUS, SPAWN_RADIUS)))
+					.add(playerPos.x, playerPos.z);
 
+			OceanTrash t;
+			if (Math.random() < BLUEPRINT_CHANCE) {
+				t = new OceanBlueprint(spawnPos, windDir, assets);
+			} else {
+				String itemName = ITEM_TYPES[MathUtils.random(ITEM_TYPES.length - 1)];
+				int    quantity = MathUtils.random(1, 5);
+				t = new OceanItem(new ItemStack(itemRegistry.get(itemName), quantity), spawnPos, windDir);
 			}
+
 			trash.add(t);
 			physics.addEntity(t);
 		}
@@ -104,5 +94,4 @@ public class TrashSystem {
 	public Iterable<OceanTrash> getTrash() {
 		return trash;
 	}
-
 }

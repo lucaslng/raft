@@ -7,8 +7,10 @@ import com.lucaslng.raft.event.events.WaterFilterTickEvent;
 
 public class WaterFilter extends Building {
 
-	public static final float DRIP_INTERVAL = 5f;   // seconds between drips
-	public static final float THIRST_RESTORE = 0.08f; // thirst restored per drip
+	/** Seconds between water drips. */
+	public static final float DRIP_INTERVAL  = 5f;
+	/** Fraction of thirst restored per drip [0,1]. */
+	public static final float THIRST_RESTORE = 0.08f;
 
 	private final EventBus events;
 	private float timer = 0f;
@@ -31,4 +33,6 @@ public class WaterFilter extends Building {
 	public String getName() {
 		return "Water Filter";
 	}
+
+	// No extra resources to clean up — model is shared and disposed via Assets.
 }

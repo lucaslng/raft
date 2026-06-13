@@ -18,10 +18,8 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.lucaslng.raft.assets.Assets;
 import com.lucaslng.raft.building.BuildingRegistry;
 import com.lucaslng.raft.event.EventBus;
-import com.lucaslng.raft.event.Subscriber;
 import com.lucaslng.raft.event.events.ToggleInventoryEvent;
 import com.lucaslng.raft.item.Item;
-import com.lucaslng.raft.player.Hotbar;
 import com.lucaslng.raft.player.PlayerStats;
 import com.lucaslng.raft.player.holdable.BuildingItem;
 import com.lucaslng.raft.player.holdable.Hammer;
@@ -30,86 +28,79 @@ import com.lucaslng.raft.raft.RaftTile;
 import com.lucaslng.raft.util.Util;
 import com.lucaslng.raft.world.World;
 
+/**
+ * Renders the 2-D heads-up display.
+ */
 class HUDRenderer implements Disposable {
 
-	private final LabelStyle mainLabelStyle;
-	private final LabelStyle hintLabelStyle;
+	// Pre-built hint label styles — created once, reused every frame.
+	private final LabelStyle hintGreen;
+	private final LabelStyle hintRed;
+	private final LabelStyle hintYellow;
+	private final LabelStyle mainStyle;
 
-	private final Stage stage;
-	private final Label fpsLabel;
-	private final Label hintLabel;
-	private final List<Disposable> disposables;
+	private final Stage         stage;
+	private final Label         fpsLabel;
+	private final Label         hintLabel;
+	private final List<Disposable> disposables = new ArrayList<>();
 
 	private final ProgressBar healthBar, hungerBar, thirstBar;
 
-	private boolean isInventoryOpen;
+	private boolean     isInventoryOpen = false;
 	private final Table inventoryTable;
 
-	protected HUDRenderer(Assets assets, EventBus events) {
-		disposables = new ArrayList<>();
+	private final BuildingRegistry buildingRegistry;
 
-		BitmapFont mainFont = assets.get("main18.ttf", BitmapFont.class);
-		mainLabelStyle = new LabelStyle(mainFont, Color.WHITE);
-		hintLabelStyle = new LabelStyle(mainFont, new Color(0.9f, 0.95f, 0.5f, 1f));
+	protected HUDRenderer(Assets assets, EventBus events, BuildingRegistry buildingRegistry) {
+		this.buildingRegistry = buildingRegistry;
 
-		stage = new Stage(new ExtendViewport(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight()));
+		BitmapFont font = assets.get("main18.ttf", BitmapFont.class);
+		mainStyle   = new LabelStyle(font, Color.WHITE);
+		hintGreen   = new LabelStyle(font, new Color(0.4f, 1f, 0.4f, 1f));
+		hintRed     = new LabelStyle(font, new Color(1f, 0.4f, 0.4f, 1f));
+		hintYellow  = new LabelStyle(font, new Color(0.9f, 0.95f, 0.5f, 1f));
+
+		stage = new Stage(new ExtendViewport(
+				Gdx.graphics.getBackBufferWidth(),
+				Gdx.graphics.getBackBufferHeight()));
 		disposables.add(stage);
 
-		// ── FPS ──────────────────────────────────────────────────────────────
-		fpsLabel = new Label("", mainLabelStyle);
+		// ── FPS label ─────────────────────────────────────────────────────
+		fpsLabel = new Label("", mainStyle);
 		fpsLabel.addAction(new Action() {
-			@Override
-			public boolean act(float delta) {
+			@Override public boolean act(float delta) {
 				((Label) actor).setText("FPS: " + Gdx.graphics.getFramesPerSecond());
 				return false;
 			}
 		});
-		Container<Label> fpsContainer = new Container<Label>(fpsLabel).bottom().left().padLeft(10f).padBottom(6f);
-		stage.addActor(fpsContainer);
+		stage.addActor(new Container<>(fpsLabel).bottom().left().padLeft(10f).padBottom(6f));
 
-		// ── Crosshair ────────────────────────────────────────────────────────
-		Container<Image> crosshairContainer = new Container<>(
+		// ── Crosshair ─────────────────────────────────────────────────────
+		Container<Image> crosshair = new Container<>(
 				new Image(assets.get("images/crosshair-normal.png", Texture.class)));
-		crosshairContainer.setFillParent(true);
-		stage.addActor(crosshairContainer);
-		crosshairContainer.center().size(16f);
+		crosshair.setFillParent(true);
+		crosshair.center().size(16f);
+		stage.addActor(crosshair);
 
-		// ── Build-hint label ─────────────────────────────────────────────────
-		hintLabel = new Label("", hintLabelStyle);
-		Container<Label> hintContainer = new Container<>(hintLabel).top().center().padTop(30f);
+		// ── Hint label ────────────────────────────────────────────────────
+		hintLabel = new Label("", hintYellow);
+		Container<Label> hintContainer = new Container<>(hintLabel).top().center().padTop(50f);
 		hintContainer.setFillParent(true);
 		stage.addActor(hintContainer);
 
-		// ── Hotbar ───────────────────────────────────────────────────────────
-		HorizontalGroup hotbar = new HorizontalGroup();
-		hotbar.setFillParent(true);
-		stage.addActor(hotbar);
-		hotbar.center().bottom();
-		hotbar.setDebug(true, true);
-
-		Texture slotBgTexture = Util.generateTexture(Color.BROWN);
-		Texture slotfgTexture = Util.generateTexture(Color.GOLD);
-		disposables.add(slotBgTexture);
-		for (int i = 0; i < Hotbar.HOTBAR_SIZE; i++) {
-			Container<Image> bg = new Container<>(new Image(slotBgTexture)).size(24);
-			Container<Image> fg = new Container<>(new Image(slotfgTexture)).size(20).center();
-			Stack slot = new Stack(bg, fg);
-			hotbar.addActor(slot);
-		}
-
-		// ── Stat bars ────────────────────────────────────────────────────────
-		Texture barBgTexture = Util.generateTexture(Color.BROWN, 20);
+		// ── Stat bars ─────────────────────────────────────────────────────
+		Texture barBg     = Util.generateTexture(Color.BROWN, 20);
 		Texture healthFill = Util.generateTexture(new Color(0.85f, 0.15f, 0.15f, 1f), 20);
 		Texture hungerFill = Util.generateTexture(new Color(0.90f, 0.65f, 0.10f, 1f), 20);
 		Texture thirstFill = Util.generateTexture(new Color(0.20f, 0.55f, 0.90f, 1f), 20);
-		disposables.add(barBgTexture);
+		disposables.add(barBg);
 		disposables.add(healthFill);
 		disposables.add(hungerFill);
 		disposables.add(thirstFill);
 
-		healthBar = makeStatBar(barBgTexture, healthFill);
-		hungerBar = makeStatBar(barBgTexture, hungerFill);
-		thirstBar = makeStatBar(barBgTexture, thirstFill);
+		healthBar = makeStatBar(barBg, healthFill);
+		hungerBar = makeStatBar(barBg, hungerFill);
+		thirstBar = makeStatBar(barBg, thirstFill);
 
 		Table statTable = new Table();
 		statTable.setFillParent(true);
@@ -120,128 +111,69 @@ class HUDRenderer implements Disposable {
 		statTable.bottom().left().pad(16);
 		stage.addActor(statTable);
 
-		// ── Inventory ────────────────────────────────────────────────────────
+		// ── Inventory ─────────────────────────────────────────────────────
 		inventoryTable = new Table();
 		inventoryTable.setFillParent(true);
 		inventoryTable.top().left().pad(14f);
+		inventoryTable.setVisible(false);
 		stage.addActor(inventoryTable);
-		inventoryTable.setVisible(isInventoryOpen);
 
-		events.subscribe(ToggleInventoryEvent.class, new Subscriber<ToggleInventoryEvent>() {
-			@Override
-			public void accept(ToggleInventoryEvent event) {
-				isInventoryOpen = !isInventoryOpen;
-				Gdx.input.setCursorCatched(!isInventoryOpen);
-				inventoryTable.setVisible(isInventoryOpen);
-			}
+		events.subscribe(ToggleInventoryEvent.class, event -> {
+			isInventoryOpen = !isInventoryOpen;
+			Gdx.input.setCursorCatched(!isInventoryOpen);
+			inventoryTable.setVisible(isInventoryOpen);
 		});
 	}
 
-	private ProgressBar makeStatBar(Texture bg, Texture fill) {
-		ProgressBar.ProgressBarStyle style = new ProgressBar.ProgressBarStyle();
-		style.background = new TextureRegionDrawable(bg);
-		style.knobBefore = new TextureRegionDrawable(fill);
-		style.knob = new TextureRegionDrawable(fill);
-		ProgressBar bar = new ProgressBar(0f, 1f, 0.001f, false, style);
-		bar.setValue(1f);
-		return bar;
-	}
-
 	protected void render(World world, float delta) {
+		// ── Stat bars ──────────────────────────────────────────────────────
 		PlayerStats stats = world.getPlayer().getStats();
 		healthBar.setValue(stats.getHealth());
 		hungerBar.setValue(stats.getHunger());
 		thirstBar.setValue(stats.getThirst());
 
-		// ── Build hint text ──────────────────────────────────────────────────
+		// ── Hint label ─────────────────────────────────────────────────────
 		Holdable held = world.getPlayer().getHotbar().getHeldItem();
 
 		if (held instanceof Hammer && world.getPlacementGhost().isVisible()) {
-			// Hammer: show tile placement cost
-			int wood = world.getPlayer().getBackpack().getCount("Wood");
-			boolean canBuild = wood >= Hammer.WOOD_COST;
-			String costStr = "[LMB] Place plank  (Wood: " + wood + " / " + Hammer.WOOD_COST + ")";
-			hintLabel.setStyle(new LabelStyle(hintLabel.getStyle().font,
-					canBuild ? new Color(0.4f, 1f, 0.4f, 1f) : new Color(1f, 0.4f, 0.4f, 1f)));
-			hintLabel.setText(costStr);
+			int  wood     = world.getPlayer().getBackpack().getCount("Wood");
+			boolean can   = wood >= Hammer.WOOD_COST;
+			hintLabel.setStyle(can ? hintGreen : hintRed);
+			hintLabel.setText("[LMB] Place plank  (Wood: " + wood + " / " + Hammer.WOOD_COST + ")");
 
 		} else if (held instanceof BuildingItem) {
-			// BuildingItem: show placement cost / affordability on a hovered tile
-			BuildingItem buildingItem = (BuildingItem) held;
-			RaftTile hoveredTile = world.getHoveredRaftTile();
+			BuildingItem item = (BuildingItem) held;
+			RaftTile tile    = world.getHoveredRaftTile();
 
-			if (hoveredTile != null) {
-				if (hoveredTile.hasBuilding()) {
-					hintLabel.setStyle(new LabelStyle(hintLabel.getStyle().font, new Color(0.9f, 0.95f, 0.5f, 1f)));
-					hintLabel.setText("Tile occupied: " + hoveredTile.getBuilding().getName());
-				} else {
-					// Check affordability
-					BuildingRegistry registry = world.getBuildingRegistry();
-					Map<String, Integer> cost = registry.getCost(buildingItem.getName());
-					boolean canAfford = canAffordAll(world, cost);
-
-					String costStr = buildCostString(buildingItem.getName(), world, cost);
-					hintLabel.setStyle(new LabelStyle(hintLabel.getStyle().font,
-							canAfford ? new Color(0.4f, 1f, 0.4f, 1f) : new Color(1f, 0.4f, 0.4f, 1f)));
-					hintLabel.setText(costStr);
-				}
+			if (tile == null) {
+				hintLabel.setStyle(hintYellow);
+				hintLabel.setText(item.getName() + " — aim at an empty raft tile");
+			} else if (tile.hasBuilding()) {
+				hintLabel.setStyle(hintYellow);
+				hintLabel.setText("Tile occupied: " + tile.getBuilding().getName());
 			} else {
-				hintLabel.setStyle(new LabelStyle(hintLabel.getStyle().font, new Color(0.9f, 0.95f, 0.5f, 1f)));
-				hintLabel.setText(buildingItem.getName() + " - aim at an empty raft tile");
+				Map<String, Integer> cost = buildingRegistry.getCost(item.getName());
+				boolean canAfford = canAffordAll(world, cost);
+				hintLabel.setStyle(canAfford ? hintGreen : hintRed);
+				hintLabel.setText(buildCostString(item.getName(), world, cost));
 			}
-
-		} else if (held != null) {
-			hintLabel.setStyle(new LabelStyle(hintLabel.getStyle().font, new Color(0.9f, 0.95f, 0.5f, 1f)));
-			hintLabel.setText("");
 
 		} else {
 			hintLabel.setText("");
 		}
 
-		// ── Inventory list ───────────────────────────────────────────────────
-		Iterable<Map.Entry<Item, Integer>> items = world.getPlayer().getBackpack().getSortedBackpackView();
-		inventoryTable.clear();
-		for (Map.Entry<Item, Integer> i : items) {
-			Item item = i.getKey();
-			int quantity = i.getValue();
-			Label label = new Label(item.name + " x" + quantity, mainLabelStyle);
-			inventoryTable.add(label).row();
+		// ── Inventory list ─────────────────────────────────────────────────
+		if (isInventoryOpen) {
+			inventoryTable.clear();
+			for (Map.Entry<Item, Integer> entry :
+					world.getPlayer().getBackpack().getSortedBackpackView()) {
+				inventoryTable.add(
+						new Label(entry.getKey().name + " x" + entry.getValue(), mainStyle)).row();
+			}
 		}
 
 		stage.act(delta);
 		stage.draw();
-	}
-
-	// ── Helpers ──────────────────────────────────────────────────────────────
-
-	private boolean canAffordAll(World world, Map<String, Integer> cost) {
-		if (cost == null)
-			return false;
-		for (Map.Entry<String, Integer> entry : cost.entrySet()) {
-			if (world.getPlayer().getBackpack().getCount(entry.getKey()) < entry.getValue())
-				return false;
-		}
-		return true;
-	}
-
-	/**
-	 * Builds a hint string like:
-	 * [LMB] Place Water Filter (String: 2/4 Wood: 4/4 Stone: 3/5)
-	 */
-	private String buildCostString(String buildingName, World world, Map<String, Integer> cost) {
-		StringBuilder sb = new StringBuilder("[LMB] Place ").append(buildingName).append("  (");
-		if (cost != null) {
-			boolean first = true;
-			for (Map.Entry<String, Integer> entry : cost.entrySet()) {
-				if (!first)
-					sb.append("  ");
-				first = false;
-				int have = world.getPlayer().getBackpack().getCount(entry.getKey());
-				sb.append(entry.getKey()).append(": ").append(have).append('/').append(entry.getValue());
-			}
-		}
-		sb.append(')');
-		return sb.toString();
 	}
 
 	protected void resize(int width, int height) {
@@ -250,7 +182,39 @@ class HUDRenderer implements Disposable {
 
 	@Override
 	public void dispose() {
-		for (Disposable disposable : disposables)
-			disposable.dispose();
+		for (Disposable d : disposables) d.dispose();
+	}
+
+	// ── Private helpers ───────────────────────────────────────────────────────
+
+	private static ProgressBar makeStatBar(Texture bg, Texture fill) {
+		ProgressBar.ProgressBarStyle style = new ProgressBar.ProgressBarStyle();
+		style.background  = new TextureRegionDrawable(bg);
+		style.knobBefore  = new TextureRegionDrawable(fill);
+		style.knob        = new TextureRegionDrawable(fill);
+		ProgressBar bar   = new ProgressBar(0f, 1f, 0.001f, false, style);
+		bar.setValue(1f);
+		return bar;
+	}
+
+	private boolean canAffordAll(World world, Map<String, Integer> cost) {
+		if (cost == null) return false;
+		for (Map.Entry<String, Integer> e : cost.entrySet())
+			if (world.getPlayer().getBackpack().getCount(e.getKey()) < e.getValue()) return false;
+		return true;
+	}
+
+	private String buildCostString(String name, World world, Map<String, Integer> cost) {
+		StringBuilder sb = new StringBuilder("[LMB] Place ").append(name).append("  (");
+		if (cost != null) {
+			boolean first = true;
+			for (Map.Entry<String, Integer> e : cost.entrySet()) {
+				if (!first) sb.append("  ");
+				first = false;
+				int have = world.getPlayer().getBackpack().getCount(e.getKey());
+				sb.append(e.getKey()).append(": ").append(have).append('/').append(e.getValue());
+			}
+		}
+		return sb.append(')').toString();
 	}
 }

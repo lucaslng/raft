@@ -16,14 +16,16 @@ public class OceanTrash extends Entity {
 
 	private final Vector2 windDir;
 	private final btRigidBody body;
+	private final btConvexHullShape shape;  // kept for disposal
+	private final MotionState motionState;  // kept for disposal
 
 	public OceanTrash(Model model, Vector2 position, Vector2 windDir) {
 		super(new ModelInstance(model));
 		this.windDir = windDir;
 		transform.setToTranslation(position.x, .2f, position.y);
 
-		btConvexHullShape shape = Util.buildConvexHullShape(this.model);
-		MotionState motionState = new MotionState(transform, shape.getImplicitShapeDimensions().y);
+		shape = Util.buildConvexHullShape(this.model);
+		motionState = new MotionState(transform, shape.getImplicitShapeDimensions().y);
 		btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(1f, motionState, shape);
 		body = new btRigidBody(info);
 		info.dispose();
@@ -33,8 +35,7 @@ public class OceanTrash extends Entity {
 
 	@Override
 	public void update(float delta) {
-		float speed = 1f;
-		speed *= delta;
+		float speed = delta;
 		transform.translate(windDir.x * speed, 0f, windDir.y * speed);
 	}
 
@@ -48,4 +49,14 @@ public class OceanTrash extends Entity {
 		events.post(new TrashCollectedEvent(this));
 	}
 
+	/**
+	 * Disposes the rigid body, the collision shape, and the motion state.
+	 * Previously only {@code body} was disposed, leaking the shape and motion state.
+	 */
+	@Override
+	public void dispose() {
+		body.dispose();
+		shape.dispose();
+		motionState.dispose();
+	}
 }

@@ -14,41 +14,55 @@ import com.lucaslng.raft.physics.MotionState;
 
 /**
  * One grid cell of the raft.
- * Grid coordinates (gridX, gridZ) map to world position (gridX * TILE_SIZE, 0, gridZ * TILE_SIZE).
+ *
+ * <h3>Coordinate spaces</h3>
+ * <ul>
+ *   <li>{@link #coord} — local grid coordinate (integer-like, e.g. (0,0), (1,0)).</li>
+ *   <li>World position — {@code raftOrigin + coord}, updated by
+ *       {@link #setWorldPosition(Vector2)} when the raft drifts.</li>
+ * </ul>
  */
 public class RaftTile implements Disposable {
 
+	/** Local grid coordinate within the raft. Never changes after construction. */
 	public final Vector2 coord;
 
 	private final ModelInstance model;
 	private final btRigidBody body;
+	private final btBoxShape shape;
+	private final MotionState motionState;
 
-	/** Optional building placed on this tile (null = empty). */
 	private Building building;
 
-	public RaftTile(Vector2 coord, Model tileModel) {
-		this.coord = coord;
+	public RaftTile(Vector2 localCoord, Vector2 worldCoord, Model tileModel) {
+		this.coord = localCoord;
 
 		model = new ModelInstance(tileModel);
-		model.transform.setToTranslation(coord.x, 0f, coord.y);
+		model.transform.setToTranslation(worldCoord.x, 0f, worldCoord.y);
 
-		BoundingBox bb = new BoundingBox();
+		BoundingBox bb  = new BoundingBox();
 		model.calculateBoundingBox(bb);
 		Vector3 dims = new Vector3();
 		bb.getDimensions(dims);
-		dims.scl(0.5f);
+		dims.scl(0.5f);   // half-extents
 
-		MotionState motionState = new MotionState(model.transform, dims.y);
-		btBoxShape shape = new btBoxShape(dims);
+		motionState = new MotionState(model.transform, dims.y);
+		shape       = new btBoxShape(dims);
 		btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(0f, motionState, shape);
 		body = new btRigidBody(info);
 		info.dispose();
-		// Store this tile as userData so raycasts can identify it
 		body.userData = this;
 	}
 
+	/** Updates the visual and physics world position for raft drift. */
+	public void setWorldPosition(Vector2 worldCoord) {
+		model.transform.setToTranslation(worldCoord.x, 0f, worldCoord.y);
+		// Bullet reads the new transform via MotionState.getWorldTransform() on the
+		// next physics step — no explicit body transform call needed for kinematic tiles.
+	}
+
 	public Vector3 getWorldCenter() {
-		return new Vector3(coord.x, 0f, coord.y);
+		return model.transform.getTranslation(new Vector3());
 	}
 
 	public ModelInstance getInstance() {
@@ -67,18 +81,21 @@ public class RaftTile implements Disposable {
 		return building;
 	}
 
-	/** Places a building on this tile. Disposes any previous building. */
+	/** Places a building on this tile, disposing any previous one. */
 	public void setBuilding(Building b) {
 		if (building != null) building.dispose();
 		building = b;
 		if (building != null) {
-			building.setPosition(coord);
+			// Position is world-space — caller should pass toWorldCoord(coord).
+			building.setPosition(model.transform.getTranslation(new Vector3()));
 		}
 	}
 
 	@Override
 	public void dispose() {
 		body.dispose();
+		shape.dispose();
+		motionState.dispose();
 		if (building != null) building.dispose();
 	}
 }
