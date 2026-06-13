@@ -5,7 +5,8 @@ import java.util.List;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
@@ -29,16 +30,28 @@ public class LoadingScreen implements Screen {
 		assets = Assets.get();
 		screenManager = ScreenManager.get();
 
-		stage = new Stage(new ExtendViewport(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight()));
+		stage = new Stage(new ExtendViewport(
+				Gdx.graphics.getBackBufferWidth(),
+				Gdx.graphics.getBackBufferHeight()));
 		disposables.add(stage);
 
-		Table mainTable = new Table();
-		mainTable.setFillParent(true);
-		stage.addActor(mainTable);
+		// Build the progress bar using the same dark palette as the other screens.
+		// The skin isn't ready yet at this point, so we construct the style manually.
+		Texture barBg   = Util.generateTexture(new Color(0.3f, 0.3f, 0.3f, 1f), 8);
+		Texture barFill = Util.generateTexture(Color.WHITE, 8);
+		disposables.add(barBg);
+		disposables.add(barFill);
 
-		progressBar = createProgressBar(disposables);
+		ProgressBarStyle style = new ProgressBarStyle();
+		style.background = new TextureRegionDrawable(barBg);
+		style.knobBefore  = new TextureRegionDrawable(barFill);
 
-		mainTable.add(progressBar).center().width(400).height(50);
+		progressBar = new ProgressBar(0f, 1f, 0.01f, false, style);
+
+		Table table = new Table();
+		table.setFillParent(true);
+		stage.addActor(table);
+		table.add(progressBar).center().width(400f).height(12f);
 
 		Bullet.init();
 	}
@@ -49,10 +62,10 @@ public class LoadingScreen implements Screen {
 			screenManager.replace(new MainMenuScreen());
 		}
 
-		float progress = assets.getProgress();
-		progressBar.setValue(progress);
+		progressBar.setValue(assets.getProgress());
 
-		ScreenUtils.clear(0.6588235294f, 0.4352941176f, 0.3294117647f, 1f);
+		// Solid dark background — matches the rest of the menu suite.
+		ScreenUtils.clear(0.12f, 0.12f, 0.12f, 1f);
 		stage.act(delta);
 		stage.draw();
 	}
@@ -64,41 +77,11 @@ public class LoadingScreen implements Screen {
 
 	@Override
 	public void dispose() {
-		for (Disposable disposable : disposables)
-			disposable.dispose();
+		for (Disposable d : disposables) d.dispose();
 	}
 
-	private static ProgressBar createProgressBar(List<Disposable> disposables) {
-		int height = 30;
-		Texture backgroundTexture = Util.generateTexture(Color.WHITE, height);
-		Texture knobTexture = Util.generateTexture(Color.BROWN, 30);
-
-		ProgressBarStyle style = new ProgressBarStyle();
-		style.background = new TextureRegionDrawable(backgroundTexture);
-		style.knobBefore = new TextureRegionDrawable(knobTexture);
-
-		ProgressBar bar = new ProgressBar(0f, 1f, .01f, false, style);
-
-		disposables.add(backgroundTexture);
-		disposables.add(knobTexture);
-
-		return bar;
-	}
-
-	@Override
-	public void show() {
-	}
-
-	@Override
-	public void pause() {
-	}
-
-	@Override
-	public void resume() {
-	}
-
-	@Override
-	public void hide() {
-	}
-
+	@Override public void show()   {}
+	@Override public void pause()  {}
+	@Override public void resume() {}
+	@Override public void hide()   {}
 }

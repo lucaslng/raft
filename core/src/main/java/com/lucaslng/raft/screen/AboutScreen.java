@@ -6,13 +6,10 @@ import java.util.List;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.lucaslng.raft.assets.Assets;
@@ -25,32 +22,44 @@ class AboutScreen implements Screen {
 	protected AboutScreen() {
 		ScreenManager screenManager = ScreenManager.get();
 		Assets assets = Assets.get();
-		Skin skin = assets.get("skin/golden-ui-skin.json", Skin.class);
+		Skin skin = assets.getSkin();
 
-		stage = new Stage(new ExtendViewport(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight()));
+		stage = new Stage(new ExtendViewport(
+				Gdx.graphics.getBackBufferWidth(),
+				Gdx.graphics.getBackBufferHeight()));
 		disposables.add(stage);
 
-		Table table = new Table();
+		Table table = new Table(skin);
 		table.setFillParent(true);
+		table.setBackground(skin.getDrawable("bg"));
+		table.pad(40f);
+		table.top();
 		stage.addActor(table);
-		table.setBackground(new TextureRegionDrawable(assets.get("images/2.png", Texture.class)));
 
-		Label title = new Label("About", skin.get("title", LabelStyle.class));
-		table.add(title).row();
+		table.add(new Label("About", skin, "title")).padBottom(40f).row();
 
-		String name = "Lucas Leung\n";
-		String date = "Friday, June 12th, 2026\n";
-		String description = "Survive the harsh seas on your little raft!"; // TODO: extend desc
-		Label about = new Label(name + date + description, skin);
-		table.add(about).row();
+		// Author / date / description block
+		String body =
+				"Lucas Leung\n" +
+				"Friday, June 12th, 2026\n\n" +
+				"Survive the harsh seas on your little raft!\n" +
+				"Collect debris, build structures, manage your hunger\n" +
+				"and thirst, and stay alive as long as you can.";
+
+		Label bodyLabel = new Label(body, skin, "white");
+		bodyLabel.setWrap(true);
+		table.add(bodyLabel).width(700f).padBottom(40f).row();
+
+		table.add().expandY().row(); // vertical spacer
 
 		TextButton backButton = new TextButton("Back", skin);
 		backButton.addListener(new ChangeListener() {
+			@Override
 			public void changed(ChangeEvent event, Actor actor) {
 				screenManager.pop();
 			}
 		});
-		table.add(backButton).width(300f).row();
+		table.add(backButton).width(240f).height(60f).row();
 	}
 
 	@Override
@@ -66,26 +75,16 @@ class AboutScreen implements Screen {
 	}
 
 	@Override
-	public void dispose() {
-		for (Disposable disposable : disposables)
-			disposable.dispose();
-	}
-
-	@Override
 	public void show() {
 		Gdx.input.setInputProcessor(stage);
 	}
 
-	@Override
-	public void pause() {
-	}
+	@Override public void pause()  {}
+	@Override public void resume() {}
+	@Override public void hide()   {}
 
 	@Override
-	public void resume() {
+	public void dispose() {
+		for (Disposable d : disposables) d.dispose();
 	}
-
-	@Override
-	public void hide() {
-	}
-
 }

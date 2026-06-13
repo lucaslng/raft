@@ -17,6 +17,16 @@ public class Keybind {
 		key = defaultKey;
 	}
 
+	/** Rebind this keybind to a new key. */
+	public void setKey(int newKey) {
+		key = newKey;
+	}
+
+	/** Returns the current keycode. */
+	public int getKey() {
+		return key;
+	}
+
 	public boolean isPressed() {
 		return Gdx.input.isKeyPressed(key);
 	}
@@ -24,7 +34,7 @@ public class Keybind {
 	public boolean isKeyJustPressed() {
 		return Gdx.input.isKeyJustPressed(key);
 	}
-	
+
 	@Override
 	public String toString() {
 		return Input.Keys.toString(key);

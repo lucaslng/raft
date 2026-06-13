@@ -44,9 +44,6 @@ public class Assets extends AssetManager {
 		setLoader(BitmapFont.class, ".ttf", new FreetypeFontLoader(getFileHandleResolver()));
 		setLoader(BitmapFont.class, ".otf", new FreetypeFontLoader(getFileHandleResolver()));
 
-		// ui skin
-		load("skin/golden-ui-skin.json", Skin.class);
-
 		// floating items
 		load("models/debris-wood.g3db", Model.class);
 		load("models/debris-stone.g3db", Model.class);
@@ -61,8 +58,6 @@ public class Assets extends AssetManager {
 		loadDefaultFont(18, "main18.ttf");
 		loadDefaultFont(42, "main42.ttf");
 		loadDefaultFont(64, "main64.ttf");
-		loadDefaultFont(36, "mainBig.ttf");
-		loadDefaultFont(100, "title.ttf");
 
 		// backgrounds
 		load("images/2.png", Texture.class);
@@ -109,6 +104,8 @@ public class Assets extends AssetManager {
 		Texture buttonUp = Util.generateTexture(
 				new Color(0.25f, 0.25f, 0.25f, 1f), 4);
 
+		Texture buttonOver = Util.generateTexture(new Color(0.20f, 0.20f, 0.20f, 1f), 4);
+
 		Texture buttonDown = Util.generateTexture(
 				new Color(0.15f, 0.15f, 0.15f, 1f), 4);
 
@@ -121,15 +118,20 @@ public class Assets extends AssetManager {
 		Texture barFg = Util.generateTexture(new Color(0.3f, 0.3f, 0.3f, 1f), 16);
 		Texture barBg = Util.generateTexture(Color.WHITE, 16);
 
+		Texture bg = Util.generateTexture(new Color(0.12f, 0.12f, 0.12f, 1f));
+
 		disposables.add(buttonUp);
+		disposables.add(buttonOver);
 		disposables.add(buttonDown);
 		disposables.add(sliderBg);
 		disposables.add(sliderKnob);
 		disposables.add(barBg);
 		disposables.add(barFg);
+		disposables.add(bg);
 
 		TextButtonStyle buttonStyle = new TextButtonStyle();
 		buttonStyle.up = new TextureRegionDrawable(buttonUp);
+		buttonStyle.over = new TextureRegionDrawable(buttonOver);
 		buttonStyle.down = new TextureRegionDrawable(buttonDown);
 		buttonStyle.font = font;
 
@@ -142,7 +144,7 @@ public class Assets extends AssetManager {
 		barStyle.knobBefore = new TextureRegionDrawable(barFg);
 
 		ScrollPaneStyle scrollPaneStyle = new ScrollPaneStyle();
-		scrollPaneStyle.background = barStyle.background;
+		scrollPaneStyle.background = null;
 
 		CheckBoxStyle checkBoxStyle = new CheckBoxStyle();
 		checkBoxStyle.font = font;
@@ -158,6 +160,7 @@ public class Assets extends AssetManager {
 		skin.add("default-horizontal", barStyle);
 		skin.add("default", scrollPaneStyle);
 		skin.add("default", checkBoxStyle);
+		skin.add("bg", bg);
 		return skin;
 	}
 
