@@ -16,7 +16,6 @@ import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.assets.Assets;
 import com.lucaslng.raft.entity.Entity;
 import com.lucaslng.raft.entity.OceanTrash;
-import com.lucaslng.raft.entity.Shark;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.world.World;
 
@@ -27,6 +26,7 @@ public class GameRenderer implements Disposable {
 	private final SkyboxRenderer skybox = new SkyboxRenderer();
 	private final HUDRenderer hud;
 	private final OceanRenderer ocean;
+	private final UnderwaterRenderer underwaterRenderer = new UnderwaterRenderer();
 	private final ModelBatch modelBatch = new ModelBatch();
 	private final ModelBatch outlineModelBatch = new ModelBatch();
 	private final DebugDrawer debugDraw = new DebugDrawer();
@@ -38,7 +38,7 @@ public class GameRenderer implements Disposable {
 
 	private final List<ModelInstance> opaque = new ArrayList<>();
 
-	private boolean isDebug = true;
+	private boolean isDebug = false;
 
 	public GameRenderer(Assets assets, World world, EventBus events) {
 		this.world = world;
@@ -50,7 +50,7 @@ public class GameRenderer implements Disposable {
 		hud = new HUDRenderer(assets, events, world.getBuildingRegistry());
 		ocean = new OceanRenderer(42L);
 
-		debugDraw.setDebugMode(btIDebugDraw.DebugDrawModes.DBG_DrawAabb);
+		debugDraw.setDebugMode(btIDebugDraw.DebugDrawModes.DBG_DrawWireframe);
 		world.getPhysics().setDebugDraw(debugDraw);
 	}
 
@@ -62,7 +62,7 @@ public class GameRenderer implements Disposable {
 
 		float daylight = MathUtils.sin(world.getTime() * MathUtils.PI2 - MathUtils.PI / 2f);
 		daylight = MathUtils.clamp((daylight + 1f) * 0.5f, 0f, 1f);
-		daylight = (float)Math.pow(daylight, 3f);
+		daylight = (float) Math.pow(daylight, 3f);
 
 		sun.color.set(SUN_NIGHT_COLOR).lerp(SUN_DAY_COLOR, daylight);
 
@@ -70,11 +70,8 @@ public class GameRenderer implements Disposable {
 		ocean.render(camera, delta);
 
 		// ── Collect opaque instances ──────────────────────────────────────
-		// All registered entities (player, shark, etc.)
 		opaque.clear();
 		opaque.addAll(world.getEntitySystem().getInstances());
-
-		// Raft tiles + buildings (cached list, no allocation unless dirty)
 		opaque.addAll(world.getRaftSystem().getInstances());
 
 		Entity hovered = world.getHoveredEntity();
@@ -103,6 +100,9 @@ public class GameRenderer implements Disposable {
 			debugDraw.end();
 		}
 
+		// ── Underwater tint (after 3D, before HUD) ────────────────────────
+		underwaterRenderer.renderIfSubmerged(camera.position.y);
+
 		hud.render(world, delta);
 	}
 
@@ -116,6 +116,7 @@ public class GameRenderer implements Disposable {
 		skybox.dispose();
 		ocean.dispose();
 		hud.dispose();
+		underwaterRenderer.dispose();
 		modelBatch.dispose();
 	}
 

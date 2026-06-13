@@ -2,6 +2,7 @@ package com.lucaslng.raft.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Buttons;
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
@@ -98,6 +99,8 @@ class GameScreen implements Screen {
 		Vector3 right = flatDir.cpy().crs(cam.up).nor();
 		if (keybinds.moveRight  .isPressed()) cam.translate(right.cpy().scl( CAMERA_SPEED));
 		if (keybinds.moveLeft   .isPressed()) cam.translate(right.cpy().scl(-CAMERA_SPEED));
+		if (Gdx.input.isKeyPressed(Keys.SHIFT_LEFT)) cam.translate(cam.up.cpy().scl(-CAMERA_SPEED));
+		if (keybinds.jump.isPressed()) cam.translate(cam.up.cpy().scl(CAMERA_SPEED));
 
 		cam.update();
 
