@@ -67,5 +67,5 @@ public class Player extends Entity {
 	}
 
 	@Override
-	public void onClicked(EventBus events) {}
+	public void onClick(EventBus events) {}
 }

@@ -13,7 +13,10 @@ import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody.btRigidBodyConstructionInfo;
 import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.building.Building;
+import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.physics.MotionState;
+import com.lucaslng.raft.world.Clickable;
+import com.lucaslng.raft.world.Outlineable;
 
 /**
  * One grid cell of the raft.
@@ -49,7 +52,7 @@ import com.lucaslng.raft.physics.MotionState;
  * update (Bullet only pumps MotionState transforms during
  * {@code stepSimulation}, not during {@code rayTest}).
  */
-public class RaftTile implements Disposable {
+public class RaftTile implements Disposable, Clickable, Outlineable {
 
 	/** Local grid coordinate within the raft. Never changes after construction. */
 	public final Vector2 coord;
@@ -169,5 +172,14 @@ public class RaftTile implements Disposable {
 		motionState.dispose();
 		if (building != null)
 			building.dispose();
+	}
+
+	@Override
+	public ModelInstance getOutlineInstance() {
+		return model;
+	}
+
+	@Override
+	public void onClick(EventBus events) {
 	}
 }

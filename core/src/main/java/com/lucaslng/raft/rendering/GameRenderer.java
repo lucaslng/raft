@@ -14,7 +14,6 @@ import com.badlogic.gdx.physics.bullet.DebugDrawer;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.assets.Assets;
-import com.lucaslng.raft.entity.Entity;
 import com.lucaslng.raft.entity.OceanTrash;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.world.World;
@@ -74,21 +73,21 @@ public class GameRenderer implements Disposable {
 		opaque.addAll(world.getEntitySystem().getInstances());
 		opaque.addAll(world.getRaftSystem().getInstances());
 
-		Entity hovered = world.getHoveredEntity();
+		ModelInstance hovered = world.getHoveredOutlineInstance();
 
 		modelBatch.begin(camera);
 		modelBatch.render(opaque, environment);
 
 		for (OceanTrash t : world.getTrash())
-			if (t != hovered)
-				modelBatch.render(t.getInstance(), environment);
+			modelBatch.render(t.getInstance(), environment);
 
 		world.getPlacementGhost().render(modelBatch, environment);
 		modelBatch.end();
 
 		// ── Hovered entity outline ────────────────────────────────────────
-		if (hovered instanceof OceanTrash) {
-			renderOutline(camera, hovered);
+		ModelInstance outlineTarget = world.getHoveredOutlineInstance();
+		if (outlineTarget != null) {
+			renderOutline(camera, outlineTarget);
 		}
 
 		// ── Debug draw ────────────────────────────────────────────────────
@@ -129,8 +128,7 @@ public class GameRenderer implements Disposable {
 
 	// ── Private helpers ───────────────────────────────────────────────────────
 
-	private void renderOutline(Camera camera, Entity entity) {
-		ModelInstance mi = entity.getInstance();
+	private void renderOutline(Camera camera, ModelInstance mi) {
 		Matrix4 original = new Matrix4(mi.transform);
 
 		Gdx.gl.glEnable(GL20.GL_STENCIL_TEST);
@@ -148,7 +146,7 @@ public class GameRenderer implements Disposable {
 		Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
 
 		try {
-			mi.transform.scale(1.05f, 1.05f, 1.05f);
+			mi.transform.scale(1.03f, 1.03f, 1.03f);
 			outlineModelBatch.begin(camera);
 			outlineModelBatch.render(mi, outlineEnvironment);
 			outlineModelBatch.end();

@@ -66,7 +66,7 @@ public class WaterFilter extends Building {
      * Opens the water-filter status UI when the player right-clicks.
      */
     @Override
-    public void onClicked(EventBus events) {
+    public void onClick(EventBus events) {
         events.post(new BuildingClickedEvent(this));
     }
 

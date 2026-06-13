@@ -6,7 +6,6 @@ import java.util.List;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.*;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
@@ -56,7 +55,7 @@ public class Shark extends Entity {
 	}
 
 	@Override
-	public void onClicked(EventBus events) {
+	public void onClick(EventBus events) {
 	}
 
 	@Override

@@ -11,8 +11,9 @@ import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.events.TrashCollectedEvent;
 import com.lucaslng.raft.physics.MotionState;
 import com.lucaslng.raft.util.Util;
+import com.lucaslng.raft.world.Outlineable;
 
-public class OceanTrash extends Entity {
+public class OceanTrash extends Entity implements Outlineable {
 
 	private final Vector2 windDir;
 	private final btRigidBody body;
@@ -46,7 +47,7 @@ public class OceanTrash extends Entity {
 	}
 
 	@Override
-	public void onClicked(EventBus events) {
+	public void onClick(EventBus events) {
 		events.post(new TrashCollectedEvent(this));
 	}
 
@@ -60,5 +61,10 @@ public class OceanTrash extends Entity {
 		body.dispose();
 		shape.dispose();
 		motionState.dispose();
+	}
+
+	@Override
+	public ModelInstance getOutlineInstance() {
+		return model;
 	}
 }

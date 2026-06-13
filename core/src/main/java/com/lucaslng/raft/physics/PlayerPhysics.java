@@ -10,17 +10,19 @@ import com.lucaslng.raft.util.Util;
 
 public class PlayerPhysics implements Disposable {
 
-	private btRigidBody body;
+	private final btRigidBody body;
+	private final MotionState motionState;
+	private final btBoxShape shape;
 
 	public PlayerPhysics(ModelInstance model) {
 		Vector3 dimensions = Util.getDimensions(model);
-		MotionState motionState = new MotionState(model.transform, dimensions.y);
-		btBoxShape boxShape = new btBoxShape(dimensions);
+		 motionState = new MotionState(model.transform, dimensions.y);
+		 shape = new btBoxShape(dimensions);
 		float mass = 2f;
 		Vector3 inertia = new Vector3();
-		boxShape.calculateLocalInertia(mass, inertia);
+		shape.calculateLocalInertia(mass, inertia);
 
-		btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(mass, motionState, boxShape, inertia);
+		btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(mass, motionState, shape, inertia);
 		body = new btRigidBody(info);
 		info.dispose();
 		body.setActivationState(Collision.DISABLE_DEACTIVATION);
@@ -39,6 +41,8 @@ public class PlayerPhysics implements Disposable {
 	@Override
 	public void dispose() {
 		body.dispose();
+		motionState.dispose();
+		shape.dispose();
 	}
 
 }

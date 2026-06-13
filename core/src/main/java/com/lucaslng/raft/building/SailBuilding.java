@@ -56,7 +56,6 @@ public class SailBuilding extends Building {
 
 	private final RaftSystem raftSystem;
 	private final Vector2 windDir;
-	private final EventBus events;
 
 	private final btRigidBody body;
 	private final btBoxShape shape;
@@ -69,7 +68,6 @@ public class SailBuilding extends Building {
 		super(new ModelInstance(model));
 		this.raftSystem = raftSystem;
 		this.windDir = windDir;
-		this.events = events;
 
 		// Default heading follows the wind
 		steerAngleDeg = toDeg(windDir);
@@ -118,7 +116,7 @@ public class SailBuilding extends Building {
 	 * Opens the sail steering UI.
 	 */
 	@Override
-	public void onClicked(EventBus events) {
+	public void onClick(EventBus events) {
 		events.post(new BuildingClickedEvent(this));
 	}
 

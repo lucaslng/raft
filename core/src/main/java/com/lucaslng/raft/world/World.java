@@ -2,6 +2,7 @@ package com.lucaslng.raft.world;
 
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.ClosestNotMeRayResultCallback;
@@ -53,8 +54,8 @@ public class World implements Disposable {
 	private final Shark shark;
 
 	// ── Raycast state (updated every frame in checkRaycast) ──────────────────
-	private Entity hoveredEntity = null;
-	private RaftTile hoveredRaftTile = null;
+	private Clickable hoveredClickable = null; // anything clicked on left/right
+	private RaftTile hoveredRaftTile = null; // kept: ghost preview needs it
 	private Vector2 ghostTarget = null;
 
 	private final ClosestNotMeRayResultCallback rayCallback;
@@ -120,7 +121,7 @@ public class World implements Disposable {
 	private void checkRaycast(Camera cam) {
 		rayCallback.setClosestHitFraction(1f);
 		rayCallback.setCollisionObject(null);
-		hoveredEntity = null;
+		hoveredClickable = null;
 		hoveredRaftTile = null;
 		ghostTarget = null;
 
@@ -132,28 +133,23 @@ public class World implements Disposable {
 			return;
 		}
 
-		btCollisionObject obj = rayCallback.getCollisionObject();
-		Object userData = obj.userData;
+		Object userData = rayCallback.getCollisionObject().userData;
 
-		if (userData instanceof OceanTrash) {
-			hoveredEntity = (OceanTrash) userData;
+		// Single branch: anything Clickable gets stored.
+		// RaftTile is also Clickable (right-click opens its building),
+		// so this covers entities, buildings, AND tiles in one cast.
+		if (userData instanceof Clickable) {
+			hoveredClickable = (Clickable) userData;
+		}
 
-		} else if (userData instanceof Entity) {
-			hoveredEntity = (Entity) userData;
-
-		} else if (userData instanceof RaftTile) {
-			RaftTile tile = (RaftTile) userData;
-			hoveredRaftTile = tile;
-
+		// Ghost preview: only meaningful when hovering a tile with the Hammer.
+		if (userData instanceof RaftTile) {
+			hoveredRaftTile = (RaftTile) userData;
 			Holdable held = player.getHotbar().getHeldItem();
 			if (held instanceof Hammer) {
-				ghostTarget = raftSystem.bestExpansionNeighbour(tile, cam.direction);
+				ghostTarget = raftSystem.bestExpansionNeighbour(
+						hoveredRaftTile, cam.direction);
 			}
-
-		} else if (userData instanceof Building) {
-			// Buildings with physics bodies (e.g. WaterFilter) register
-			// themselves as userData on their btRigidBody.
-			// We resolve the parent tile so the HUD can still show tile info.
 		}
 
 		placementGhost.setTarget(ghostTarget);
@@ -163,14 +159,16 @@ public class World implements Disposable {
 	 * Called by {@code GameScreen} when the left mouse button is just pressed.
 	 */
 	public void handleLeftClick() {
-		if (hoveredEntity instanceof OceanTrash) {
-			((OceanTrash) hoveredEntity).onClicked(events);
-			return;
-		}
-
 		Holdable held = player.getHotbar().getHeldItem();
 		if (held == null)
 			return;
+
+		// Items in the ocean are always collected on left-click,
+		// regardless of held tool.
+		if (hoveredClickable instanceof OceanTrash) {
+			hoveredClickable.onClick(events);
+			return;
+		}
 
 		if (held instanceof Hammer && ghostTarget != null) {
 			held.onLeftClick(this);
@@ -186,8 +184,8 @@ public class World implements Disposable {
 	 * If the hovered tile contains a building, opens that building's UI.
 	 */
 	public void handleRightClick() {
-		if (hoveredRaftTile != null && hoveredRaftTile.hasBuilding()) {
-			hoveredRaftTile.getBuilding().onClicked(events);
+		if (hoveredClickable != null) {
+			hoveredClickable.onClick(events);
 		}
 	}
 
@@ -237,8 +235,11 @@ public class World implements Disposable {
 		return trashSystem.getTrash();
 	}
 
-	public Entity getHoveredEntity() {
-		return hoveredEntity;
+	public ModelInstance getHoveredOutlineInstance() {
+		if (hoveredClickable instanceof Outlineable) {
+			return ((Outlineable) hoveredClickable).getOutlineInstance();
+		}
+		return null;
 	}
 
 	public RaftTile getHoveredRaftTile() {

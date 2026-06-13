@@ -5,6 +5,9 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.event.EventBus;
+import com.lucaslng.raft.world.Clickable;
+import com.lucaslng.raft.world.Outlineable;
+import com.lucaslng.raft.world.World;
 
 /**
  * A structure that can be placed on a {@link com.lucaslng.raft.raft.RaftTile}.
@@ -35,7 +38,7 @@ import com.lucaslng.raft.event.EventBus;
  * no-ops; subclasses post appropriate events.</li>
  * </ul>
  */
-public abstract class Building implements Disposable {
+public abstract class Building implements Disposable, Clickable, Outlineable {
 
 	protected final ModelInstance model;
 
@@ -69,11 +72,8 @@ public abstract class Building implements Disposable {
 		return null;
 	}
 
-	/**
-	 * Called when the player right-clicks this building.
-	 * Default implementation is a no-op. Override to post UI-open events or
-	 * trigger building-specific behaviour.
-	 */
-	public void onClicked(EventBus events) {
+	@Override
+	public ModelInstance getOutlineInstance() {
+		return model;
 	}
 }
