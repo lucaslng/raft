@@ -40,7 +40,7 @@ class GameScreen implements Screen {
 		gameRenderer = new GameRenderer(assets, world, events);
 
 		Music music = assets.get("music/The Pirate's Waltz.mp3", Music.class);
-		music.setVolume(.2f);
+		music.setVolume(.15f);
 		music.play();
 		music.setLooping(true);
 
