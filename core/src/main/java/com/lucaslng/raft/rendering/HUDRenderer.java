@@ -80,22 +80,46 @@ class HUDRenderer implements Disposable {
 
 	private final BuildingRegistry buildingRegistry;
 	private final EventBus events;
-	private final Skin skin;
 
-	/** Currently open building panel — {@code null} if none. */
-	private Window openBuildingPanel = null;
+	private Table openBuildingPanel = null;
+	private final TextButton.TextButtonStyle buttonStyle;
+	private final Slider.SliderStyle sliderStyle;
 
 	protected HUDRenderer(Assets assets, EventBus events, BuildingRegistry buildingRegistry) {
 		this.buildingRegistry = buildingRegistry;
 		this.events = events;
-
-		skin = assets.get("skin/golden-ui-skin.json", Skin.class);
 
 		BitmapFont font = assets.get("main42.ttf", BitmapFont.class);
 		whiteStyle = new LabelStyle(font, Color.WHITE);
 		greenStyle = new LabelStyle(font, new Color(0.4f, 1f, 0.4f, 1f));
 		redStyle = new LabelStyle(font, new Color(1f, 0.4f, 0.4f, 1f));
 		yellowStyle = new LabelStyle(font, new Color(0.9f, 0.95f, 0.5f, 1f));
+
+		Texture buttonUp = Util.generateTexture(
+				new Color(0.25f, 0.25f, 0.25f, 1f), 4);
+
+		Texture buttonDown = Util.generateTexture(
+				new Color(0.15f, 0.15f, 0.15f, 1f), 4);
+
+		Texture sliderBg = Util.generateTexture(
+				new Color(0.3f, 0.3f, 0.3f, 1f), 4);
+
+		Texture sliderKnob = Util.generateTexture(
+				Color.WHITE, 16);
+
+		disposables.add(buttonUp);
+		disposables.add(buttonDown);
+		disposables.add(sliderBg);
+		disposables.add(sliderKnob);
+
+		buttonStyle = new TextButton.TextButtonStyle();
+		buttonStyle.up = new TextureRegionDrawable(buttonUp);
+		buttonStyle.down = new TextureRegionDrawable(buttonDown);
+		buttonStyle.font = font;
+
+		sliderStyle = new Slider.SliderStyle();
+		sliderStyle.background = new TextureRegionDrawable(sliderBg);
+		sliderStyle.knob = new TextureRegionDrawable(sliderKnob);
 
 		stage = new Stage(new ExtendViewport(
 				Gdx.graphics.getBackBufferWidth(),
@@ -262,12 +286,13 @@ class HUDRenderer implements Disposable {
 	 */
 	private void openBuildingPanel(Building building) {
 		closeBuildingPanel();
+
 		Gdx.input.setCursorCatched(false);
 
 		if (building instanceof SailBuilding) {
-			openBuildingPanel = buildSailPanel((SailBuilding) building);
+			SailBuilding sail = (SailBuilding) building;
+			openBuildingPanel = buildSailPanel(sail);
 		} else {
-			// Generic "info" panel for unknown building types
 			openBuildingPanel = buildGenericPanel(building);
 		}
 
@@ -284,125 +309,127 @@ class HUDRenderer implements Disposable {
 
 	// ── Sail panel ────────────────────────────────────────────────────────────
 
-	/**
-	 * Builds the sail steering panel.
-	 *
-	 * <p>
-	 * Contains:
-	 * <ul>
-	 * <li>Wind direction indicator (read-only compass label)</li>
-	 * <li>Heading slider 0–360° (clockwise from north/+Z)</li>
-	 * <li>Current heading display</li>
-	 * <li>Preset direction buttons (N, NE, E, SE, S, SW, W, NW)</li>
-	 * <li>Follow Wind button (resets to wind direction)</li>
-	 * </ul>
-	 */
-	private Window buildSailPanel(SailBuilding sail) {
-		Window win = new Window("Sail Control", skin);
-		win.setMovable(true);
-		win.defaults().pad(5f);
+	private Table buildSailPanel(SailBuilding sail) {
 
-		// ── Wind info ──────────────────────────────────────────────────────
+		Table panel = createOverlay("Sail Control");
+
 		float windDeg = SailBuilding.toDeg(sail.getWindDir());
-		win.add(new Label("Wind: " + formatBearing(windDeg), whiteStyle))
-				.left().colspan(4).row();
 
-		// ── Current heading label (updated by slider) ──────────────────────
-		Label headingLabel = new Label("Heading: " + formatBearing(sail.getSteerAngleDeg()), whiteStyle);
-		win.add(headingLabel).left().colspan(4).row();
+		panel.add(new Label(
+				"Wind: " + formatBearing(windDeg),
+				whiteStyle))
+				.row();
 
-		// ── Compass slider (0–360) ─────────────────────────────────────────
-		Slider compass = new Slider(0f, 360f, 1f, false, skin);
-		compass.setValue(sail.getSteerAngleDeg());
+		Label headingLabel = new Label(
+				"Heading: " +
+						formatBearing(sail.getSteerAngleDeg()),
+				whiteStyle);
 
-		compass.addListener(new ChangeListener() {
+		panel.add(headingLabel)
+				.padBottom(20f)
+				.row();
+
+		Slider slider = new Slider(
+				0f,
+				360f,
+				1f,
+				false,
+				sliderStyle);
+
+		slider.setValue(sail.getSteerAngleDeg());
+
+		slider.addListener(new ChangeListener() {
 			@Override
-			public void changed(ChangeEvent event, Actor actor) {
-				float deg = compass.getValue();
-				headingLabel.setText("Heading: " + formatBearing(deg));
-				events.post(new SailSteerEvent(deg));
+			public void changed(ChangeEvent event,
+					Actor actor) {
+
+				float angle = slider.getValue();
+
+				headingLabel.setText(
+						"Heading: "
+								+ formatBearing(angle));
+
+				events.post(
+						new SailSteerEvent(angle));
 			}
 		});
-		win.add(compass).colspan(4).width(300f).row();
 
-		// ── Preset cardinal / intercardinal direction buttons ──────────────
-		String[][] presets = {
-				{ "NW", "N", "NE" },
-				{ "W", "·", "E" },
-				{ "SW", "S", "SE" }
-		};
-		float[] presetAngles = {
-				315f, 0f, 45f,
-				270f, -1f, 90f,
-				225f, 180f, 135f
-		};
+		panel.add(slider)
+				.width(500f)
+				.padBottom(30f)
+				.row();
 
-		int idx = 0;
-		for (String[] row : presets) {
-			for (String label : row) {
-				final float angle = presetAngles[idx++];
-				if (label.equals("·")) {
-					win.add(); // spacer
-					continue;
-				}
-				TextButton btn = new TextButton(label, skin);
-				btn.addListener(new ChangeListener() {
-					@Override
-					public void changed(ChangeEvent event, Actor actor) {
-						compass.setValue(angle);
-						events.post(new SailSteerEvent(angle));
-					}
-				});
-				win.add(btn).size(54f, 40f);
-			}
-			win.row();
-		}
+		TextButton close = new TextButton(
+				"Close",
+				buttonStyle);
 
-		// ── Follow Wind button ─────────────────────────────────────────────
-		TextButton followWind = new TextButton("Follow Wind", skin);
-		followWind.addListener(new ChangeListener() {
-			@Override
-			public void changed(ChangeEvent event, Actor actor) {
-				float windAngle = SailBuilding.toDeg(sail.getWindDir());
-				compass.setValue(windAngle);
-				events.post(new SailSteerEvent(windAngle));
-			}
-		});
-		win.add(followWind).colspan(4).width(200f).padTop(6f).row();
-
-		// ── Close ──────────────────────────────────────────────────────────
-		TextButton close = new TextButton("Close", skin);
 		close.addListener(new ChangeListener() {
 			@Override
-			public void changed(ChangeEvent event, Actor actor) {
+			public void changed(ChangeEvent event,
+					Actor actor) {
 				closeBuildingPanel();
 			}
 		});
-		win.add(close).colspan(4).width(120f).padTop(4f).row();
 
-		win.pack();
-		centerWindow(win);
-		return win;
+		panel.add(close)
+				.width(180f)
+				.height(60f);
+
+		return panel;
 	}
 
-	// ── Generic panel ─────────────────────────────────────────────────────────
+	private Table buildGenericPanel(Building building) {
 
-	private Window buildGenericPanel(Building building) {
-		Window win = new Window(building.getName(), skin);
-		win.setMovable(true);
-		win.defaults().pad(6f);
-		win.add(new Label(building.getName(), whiteStyle)).left().row();
-		TextButton close = new TextButton("Close", skin);
+		Table panel = createOverlay(building.getName());
+
+		panel.add(
+				new Label(
+						building.getName(),
+						whiteStyle))
+				.expand()
+				.center()
+				.row();
+
+		TextButton close = new TextButton(
+				"Close",
+				buttonStyle);
+
 		close.addListener(new ChangeListener() {
 			@Override
-			public void changed(ChangeEvent event, Actor actor) {
+			public void changed(ChangeEvent event,
+					Actor actor) {
 				closeBuildingPanel();
 			}
 		});
-		win.add(close).padTop(10f).width(120f).row();
-		win.pack();
-		centerWindow(win);
-		return win;
+
+		panel.add(close)
+				.width(180f)
+				.height(60f);
+
+		return panel;
+	}
+
+	private Table createOverlay(String title) {
+
+		Texture bg = Util.generateTexture(
+				new Color(0f, 0f, 0f, 0.85f));
+
+		disposables.add(bg);
+
+		Table root = new Table();
+		root.setFillParent(true);
+
+		root.setBackground(
+				new TextureRegionDrawable(bg));
+
+		root.center();
+		root.defaults().pad(10f);
+
+		Label titleLabel = new Label(title, whiteStyle);
+
+		root.add(titleLabel).padBottom(25f).row();
+
+		return root;
 	}
 
 	// ── Private helpers ───────────────────────────────────────────────────────
@@ -449,11 +476,5 @@ class HUDRenderer implements Disposable {
 		String[] cardinals = { "N", "NE", "E", "SE", "S", "SW", "W", "NW", "N" };
 		int idx = (int) Math.round(deg / 45.0) % 8;
 		return (int) deg + "°  " + cardinals[idx];
-	}
-
-	private void centerWindow(Window win) {
-		float sw = Gdx.graphics.getBackBufferWidth();
-		float sh = Gdx.graphics.getBackBufferHeight();
-		win.setPosition((sw - win.getWidth()) / 2f, (sh - win.getHeight()) / 2f);
 	}
 }
