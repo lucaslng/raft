@@ -9,6 +9,8 @@ import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.entity.Entity;
 import com.lucaslng.raft.event.EventBus;
+import com.lucaslng.raft.event.Subscriber;
+import com.lucaslng.raft.event.events.BuildingPlacedEvent;
 
 public class PhysicsSystem implements Disposable {
 
@@ -27,6 +29,15 @@ public class PhysicsSystem implements Disposable {
 		world.setGravity(new Vector3(0, -8f, 0));
 		broadphase.getOverlappingPairCache()
 				.setInternalGhostPairCallback(new btGhostPairCallback());
+
+		events.subscribe(BuildingPlacedEvent.class, new Subscriber<BuildingPlacedEvent>() {
+			@Override
+			public void accept(BuildingPlacedEvent event) {
+				btRigidBody b = event.building.getBody();
+				if (b != null)
+					addBody(b);
+			}
+		});
 	}
 
 	public void rayCast(Vector3 from, Vector3 to, RayResultCallback callback) {
@@ -34,7 +45,7 @@ public class PhysicsSystem implements Disposable {
 	}
 
 	public void update(float delta) {
-		world.stepSimulation(delta, 5, 1/60f);
+		world.stepSimulation(delta, 5, 1 / 60f);
 	}
 
 	public void addBody(btRigidBody body) {

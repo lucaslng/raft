@@ -16,8 +16,8 @@ public class OceanTrash extends Entity {
 
 	private final Vector2 windDir;
 	private final btRigidBody body;
-	private final btConvexHullShape shape;  // kept for disposal
-	private final MotionState motionState;  // kept for disposal
+	private final btConvexHullShape shape; // kept for disposal
+	private final MotionState motionState; // kept for disposal
 
 	public OceanTrash(Model model, Vector2 position, Vector2 windDir) {
 		super(new ModelInstance(model));
@@ -29,7 +29,8 @@ public class OceanTrash extends Entity {
 		btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(1f, motionState, shape);
 		body = new btRigidBody(info);
 		info.dispose();
-		body.setCollisionFlags(body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT);
+		body.setCollisionFlags(body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT
+				| btCollisionObject.CollisionFlags.CF_NO_CONTACT_RESPONSE);
 		body.userData = this;
 	}
 
@@ -51,7 +52,8 @@ public class OceanTrash extends Entity {
 
 	/**
 	 * Disposes the rigid body, the collision shape, and the motion state.
-	 * Previously only {@code body} was disposed, leaking the shape and motion state.
+	 * Previously only {@code body} was disposed, leaking the shape and motion
+	 * state.
 	 */
 	@Override
 	public void dispose() {

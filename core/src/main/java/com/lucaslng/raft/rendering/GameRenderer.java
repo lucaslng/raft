@@ -38,7 +38,7 @@ public class GameRenderer implements Disposable {
 
 	private final List<ModelInstance> opaque = new ArrayList<>();
 
-	private boolean isDebug = false;
+	private boolean isDebug = true;
 
 	public GameRenderer(Assets assets, World world, EventBus events) {
 		this.world = world;
@@ -50,7 +50,7 @@ public class GameRenderer implements Disposable {
 		hud = new HUDRenderer(assets, events, world.getBuildingRegistry());
 		ocean = new OceanRenderer(42L);
 
-		debugDraw.setDebugMode(btIDebugDraw.DebugDrawModes.DBG_DrawWireframe);
+		debugDraw.setDebugMode(btIDebugDraw.DebugDrawModes.DBG_DrawAabb);
 		world.getPhysics().setDebugDraw(debugDraw);
 	}
 

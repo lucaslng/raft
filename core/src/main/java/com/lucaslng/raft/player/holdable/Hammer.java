@@ -9,7 +9,7 @@ import com.lucaslng.raft.world.World;
 public class Hammer extends Holdable {
 
 	public static final String NAME      = "Hammer";
-	public static final int    WOOD_COST = 2;
+	public static final int    WOOD_COST = 0; 
 
 	@Override
 	public String getName() { return NAME; }

@@ -31,6 +31,7 @@ public class RaftTile implements Disposable {
 	private final btRigidBody body;
 	private final btBoxShape shape;
 	private final MotionState motionState;
+	private final Vector3 dims;
 
 	private Building building;
 
@@ -42,7 +43,7 @@ public class RaftTile implements Disposable {
 
 		BoundingBox bb  = new BoundingBox();
 		model.calculateBoundingBox(bb);
-		Vector3 dims = new Vector3();
+		dims = new Vector3();
 		bb.getDimensions(dims);
 		dims.scl(0.5f);   // half-extents
 
@@ -87,7 +88,10 @@ public class RaftTile implements Disposable {
 		building = b;
 		if (building != null) {
 			// Position is world-space — caller should pass toWorldCoord(coord).
-			building.setPosition(model.transform.getTranslation(new Vector3()));
+			Vector3 position = new Vector3();
+			model.transform.getTranslation(position);
+			position.y += dims.y;
+			building.setPosition(position);
 		}
 	}
 

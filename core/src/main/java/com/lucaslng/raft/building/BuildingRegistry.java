@@ -47,7 +47,8 @@ public class BuildingRegistry {
 		register(
 				"Water Filter",
 				() -> new WaterFilter(waterFilterModel, events),
-				Map.of("String", 4, "Wood", 4, "Stone", 5));
+				Map.of());
+				// Map.of("String", 4, "Wood", 4, "Stone", 5));
 
 		// ── Sail (stub — future feature) ──────────────────────────────────
 		// Uncomment and implement SailBuilding when the raft-drift feature is ready.
