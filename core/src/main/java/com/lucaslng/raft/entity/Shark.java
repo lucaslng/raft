@@ -27,15 +27,11 @@ public class Shark extends Entity {
 		disposables = new ArrayList<>();
 
 		Util.scaleModelInstance(this.model, 1f);
-		Vector3 center = Util.centerModelInstance(this.model);
 
 		Vector3 dimensions = Util.getDimensions(this.model);
 		btBoxShape shape = new btBoxShape(dimensions);
-		btCompoundShape compound = new btCompoundShape();
-		Matrix4 childTransform = new Matrix4().setToTranslation(center);
-		compound.addChildShape(childTransform, shape);
 		MotionState motionState = new MotionState(transform, 0f);
-		btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(1f, motionState, compound);
+		btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(1f, motionState, shape);
 		body = new btRigidBody(info);
 		info.dispose();
 		body.setCollisionFlags(body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT);
@@ -45,7 +41,6 @@ public class Shark extends Entity {
 		animationController.setAnimation("Armature|Swim", -1);
 
 		disposables.add(body);
-		disposables.add(compound);
 		disposables.add(shape);
 		disposables.add(motionState);
 	}
