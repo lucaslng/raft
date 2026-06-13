@@ -26,7 +26,7 @@ public class Shark extends Entity {
 		disposables = new ArrayList<>();
 
 		Util.scaleModelInstance(this.model, 1f);
-
+		
 		Vector3 dimensions = Util.getDimensions(this.model);
 		btBoxShape shape = new btBoxShape(dimensions);
 		MotionState motionState = new MotionState(transform, 0f);

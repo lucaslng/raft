@@ -12,9 +12,11 @@ import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody.btRigidBodyConstructionInfo;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.events.BuildingClickedEvent;
+import com.lucaslng.raft.event.events.PanelOpenedEvent;
 import com.lucaslng.raft.event.events.SailSteerEvent;
 import com.lucaslng.raft.physics.MotionState;
 import com.lucaslng.raft.raft.RaftSystem;
+import com.lucaslng.raft.rendering.hud.SailPanel;
 import com.lucaslng.raft.util.Util;
 
 /**
@@ -122,6 +124,7 @@ public class SailBuilding extends Building {
 	@Override
 	public void onClick(EventBus events) {
 		events.post(new BuildingClickedEvent(this));
+		events.post(new PanelOpenedEvent(new SailPanel(this, events)));
 	}
 
 	/** Returns the current steering angle so the UI can initialise correctly. */

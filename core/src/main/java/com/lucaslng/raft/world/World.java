@@ -1,8 +1,10 @@
 package com.lucaslng.raft.world;
 
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.ClosestNotMeRayResultCallback;
@@ -78,8 +80,13 @@ public class World implements Disposable {
 		player = new Player(
 				assets.get("models/character-male.g3dj", Model.class),
 				new Vector3(0f, 1f, 0f), events);
+
+		Model sharkModel = assets.get("models/shark.g3dj", Model.class);
+		for (Material m : sharkModel.materials) {
+			m.set(IntAttribute.createCullFace(0));
+		}
 		shark = new Shark(
-				assets.get("models/shark.g3dj", Model.class),
+				sharkModel,
 				new Vector3(3f, 1f, 0f));
 
 		entitySystem.add(player);

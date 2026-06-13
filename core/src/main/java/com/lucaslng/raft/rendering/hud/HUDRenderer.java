@@ -1,4 +1,4 @@
-package com.lucaslng.raft.rendering;
+package com.lucaslng.raft.rendering.hud;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,18 +11,17 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.lucaslng.raft.assets.Assets;
-import com.lucaslng.raft.building.Building;
 import com.lucaslng.raft.building.BuildingRegistry;
 import com.lucaslng.raft.building.SailBuilding;
 import com.lucaslng.raft.event.EventBus;
-import com.lucaslng.raft.event.events.BuildingClickedEvent;
-import com.lucaslng.raft.event.events.SailSteerEvent;
-import com.lucaslng.raft.event.events.ToggleInventoryEvent;
+import com.lucaslng.raft.event.events.*;
 import com.lucaslng.raft.item.Item;
 import com.lucaslng.raft.player.Hotbar;
 import com.lucaslng.raft.player.PlayerStats;
@@ -58,13 +57,9 @@ import com.lucaslng.raft.world.World;
  * {@link SailSteerEvent} which the {@link SailBuilding} subscribes to.
  * </p>
  */
-class HUDRenderer implements Disposable {
+public class HUDRenderer implements Disposable {
 
-	// Pre-built hint label styles — created once, reused every frame.
-	private final LabelStyle greenStyle;
-	private final LabelStyle redStyle;
-	private final LabelStyle yellowStyle;
-	private final LabelStyle whiteStyle;
+	private final Skin skin = new Skin();
 
 	private final Stage stage;
 	private final Label fpsLabel;
@@ -73,27 +68,23 @@ class HUDRenderer implements Disposable {
 
 	private final ProgressBar healthBar, hungerBar, thirstBar;
 
-	private final Table hotbarTable = new Table();
+	private final Table hotbarTable = new Table(skin);
 
-	private final Table inventoryTable = new Table();
+	private final Table inventoryTable = new Table(skin);
 	private boolean isInventoryOpen = false;
 
 	private final BuildingRegistry buildingRegistry;
-	private final EventBus events;
 
-	private Table openBuildingPanel = null;
-	private final TextButton.TextButtonStyle buttonStyle;
-	private final Slider.SliderStyle sliderStyle;
+	private final Table panelTable = new Table(skin);
 
-	protected HUDRenderer(Assets assets, EventBus events, BuildingRegistry buildingRegistry) {
+	public HUDRenderer(Assets assets, EventBus events, BuildingRegistry buildingRegistry) {
 		this.buildingRegistry = buildingRegistry;
-		this.events = events;
 
 		BitmapFont font = assets.get("main42.ttf", BitmapFont.class);
-		whiteStyle = new LabelStyle(font, Color.WHITE);
-		greenStyle = new LabelStyle(font, new Color(0.4f, 1f, 0.4f, 1f));
-		redStyle = new LabelStyle(font, new Color(1f, 0.4f, 0.4f, 1f));
-		yellowStyle = new LabelStyle(font, new Color(0.9f, 0.95f, 0.5f, 1f));
+		LabelStyle whiteStyle = new LabelStyle(font, Color.WHITE);
+		LabelStyle greenStyle = new LabelStyle(font, new Color(0.4f, 1f, 0.4f, 1f));
+		LabelStyle redStyle = new LabelStyle(font, new Color(1f, 0.4f, 0.4f, 1f));
+		LabelStyle yellowStyle = new LabelStyle(font, new Color(0.9f, 0.95f, 0.5f, 1f));
 
 		Texture buttonUp = Util.generateTexture(
 				new Color(0.25f, 0.25f, 0.25f, 1f), 4);
@@ -112,14 +103,22 @@ class HUDRenderer implements Disposable {
 		disposables.add(sliderBg);
 		disposables.add(sliderKnob);
 
-		buttonStyle = new TextButton.TextButtonStyle();
+		TextButtonStyle buttonStyle = new TextButtonStyle();
 		buttonStyle.up = new TextureRegionDrawable(buttonUp);
 		buttonStyle.down = new TextureRegionDrawable(buttonDown);
 		buttonStyle.font = font;
 
-		sliderStyle = new Slider.SliderStyle();
+		SliderStyle sliderStyle = new SliderStyle();
 		sliderStyle.background = new TextureRegionDrawable(sliderBg);
 		sliderStyle.knob = new TextureRegionDrawable(sliderKnob);
+
+		skin.add("white", whiteStyle);
+		skin.add("default", whiteStyle);
+		skin.add("green", greenStyle);
+		skin.add("red", redStyle);
+		skin.add("yellow", yellowStyle);
+		skin.add("default", buttonStyle);
+		skin.add("default-horizontal", sliderStyle);
 
 		stage = new Stage(new ExtendViewport(
 				Gdx.graphics.getBackBufferWidth(),
@@ -127,7 +126,7 @@ class HUDRenderer implements Disposable {
 		disposables.add(stage);
 
 		// ── FPS label ─────────────────────────────────────────────────────
-		fpsLabel = new Label("", whiteStyle);
+		fpsLabel = new Label("", skin);
 		fpsLabel.addAction(new Action() {
 			@Override
 			public boolean act(float delta) {
@@ -145,7 +144,7 @@ class HUDRenderer implements Disposable {
 		stage.addActor(crosshair);
 
 		// ── Hint label ────────────────────────────────────────────────────
-		hintLabel = new Label("", yellowStyle);
+		hintLabel = new Label("", skin, "yellow");
 		Container<Label> hintContainer = new Container<>(hintLabel).top().center().padTop(64f);
 		hintContainer.setFillParent(true);
 		stage.addActor(hintContainer);
@@ -191,15 +190,31 @@ class HUDRenderer implements Disposable {
 			inventoryTable.setVisible(isInventoryOpen);
 		});
 
-		// ── Building panel listener ────────────────────────────────────────
-		events.subscribe(BuildingClickedEvent.class, event -> {
-			openBuildingPanel(event.building);
+		// Panels
+		panelTable.setVisible(false);
+		panelTable.setFillParent(true);
+		Texture bg = Util.generateTexture(
+				new Color(0f, 0f, 0f, 0.85f));
+		panelTable.setBackground(new TextureRegionDrawable(bg));
+		disposables.add(bg);
+		stage.addActor(panelTable);
+		events.subscribe(PanelOpenedEvent.class, event -> {
+			if (event.panel != null) {
+				panelTable.clear();
+				panelTable.setVisible(true);
+				event.panel.populate(panelTable);
+				Gdx.input.setCursorCatched(false);
+			} else {
+				panelTable.setVisible(false);
+				panelTable.clear();
+				Gdx.input.setCursorCatched(true);
+			}
 		});
 	}
 
 	// ── Per-frame render ─────────────────────────────────────────────────────
 
-	protected void render(World world, float delta) {
+	public void render(World world, float delta) {
 		// ── Stat bars ──────────────────────────────────────────────────────
 		PlayerStats stats = world.getPlayer().getStats();
 		healthBar.setValue(stats.getHealth());
@@ -212,8 +227,8 @@ class HUDRenderer implements Disposable {
 		for (int i = 0; i < Hotbar.HOTBAR_SIZE; i++) {
 			Holdable h = hotbar.getItem(i);
 			if (h != null)
-				hotbarTable.add(new Label(String.format("[%d] %s", i + 1, h.getName()),
-						i == hotbar.getHeldIndex() ? greenStyle : whiteStyle)).row();
+				hotbarTable.add(new Label(String.format("[%d] %s", i + 1, h.getName()), skin,
+						i == hotbar.getHeldIndex() ? "green" : "white")).row();
 		}
 
 		// ── Hint label ─────────────────────────────────────────────────────
@@ -222,7 +237,7 @@ class HUDRenderer implements Disposable {
 		if (held instanceof Hammer && world.getPlacementGhost().isVisible()) {
 			int wood = world.getPlayer().getBackpack().getCount("Wood");
 			boolean can = wood >= Hammer.WOOD_COST;
-			hintLabel.setStyle(can ? greenStyle : redStyle);
+			hintLabel.setStyle(can ? skin.get("green", LabelStyle.class) : skin.get("red", LabelStyle.class));
 			hintLabel.setText("[LMB] Place plank  (Wood: " + wood + " / " + Hammer.WOOD_COST + ")");
 
 		} else if (held instanceof BuildingItem) {
@@ -230,15 +245,15 @@ class HUDRenderer implements Disposable {
 			RaftTile tile = world.getHoveredRaftTile();
 
 			if (tile == null) {
-				hintLabel.setStyle(yellowStyle);
+				hintLabel.setStyle(skin.get("yellow", LabelStyle.class));
 				hintLabel.setText(item.getName() + " - aim at an empty raft tile");
 			} else if (tile.hasBuilding()) {
-				hintLabel.setStyle(yellowStyle);
+				hintLabel.setStyle(skin.get("yellow", LabelStyle.class));
 				hintLabel.setText("Tile occupied: " + tile.getBuilding().getName());
 			} else {
 				Map<String, Integer> cost = buildingRegistry.getCost(item.getName());
 				boolean canAfford = canAffordAll(world, cost);
-				hintLabel.setStyle(canAfford ? greenStyle : redStyle);
+				hintLabel.setStyle(canAfford ? skin.get("green", LabelStyle.class) : skin.get("red", LabelStyle.class));
 				hintLabel.setText(buildCostString(item.getName(), world, cost));
 			}
 
@@ -252,7 +267,7 @@ class HUDRenderer implements Disposable {
 			inventoryTable.clear();
 			for (Map.Entry<Item, Integer> entry : world.getPlayer().getBackpack().getSortedBackpackView()) {
 				inventoryTable.add(
-						new Label(entry.getKey().name + " x" + entry.getValue(), whiteStyle)).row();
+						new Label(entry.getKey().name + " x" + entry.getValue(), skin)).row();
 			}
 		}
 
@@ -260,14 +275,11 @@ class HUDRenderer implements Disposable {
 		stage.draw();
 	}
 
-	protected void resize(int width, int height) {
+	public void resize(int width, int height) {
 		stage.getViewport().update(width, height, true);
 	}
 
-	/**
-	 * Exposes the Stage so {@link GameRenderer} can add it to an InputMultiplexer.
-	 */
-	protected Stage getStage() {
+	public Stage getStage() {
 		return stage;
 	}
 
@@ -277,165 +289,8 @@ class HUDRenderer implements Disposable {
 			d.dispose();
 	}
 
-	// ── Building panels ──────────────────────────────────────────────────────
-
-	/**
-	 * Closes any open panel, then opens the panel appropriate for
-	 * the clicked building. Uncatches the cursor so the player can
-	 * interact with the UI.
-	 */
-	private void openBuildingPanel(Building building) {
-		closeBuildingPanel();
-
-		Gdx.input.setCursorCatched(false);
-
-		if (building instanceof SailBuilding) {
-			SailBuilding sail = (SailBuilding) building;
-			openBuildingPanel = buildSailPanel(sail);
-		} else {
-			openBuildingPanel = buildGenericPanel(building);
-		}
-
-		stage.addActor(openBuildingPanel);
-	}
-
-	private void closeBuildingPanel() {
-		if (openBuildingPanel != null) {
-			openBuildingPanel.remove();
-			openBuildingPanel = null;
-			Gdx.input.setCursorCatched(true);
-		}
-	}
-
-	// ── Sail panel ────────────────────────────────────────────────────────────
-
-	private Table buildSailPanel(SailBuilding sail) {
-
-		Table panel = createOverlay("Sail Control");
-
-		float windDeg = SailBuilding.toDeg(sail.getWindDir());
-
-		panel.add(new Label(
-				"Wind: " + formatBearing(windDeg),
-				whiteStyle))
-				.row();
-
-		Label headingLabel = new Label(
-				"Heading: " +
-						formatBearing(sail.getSteerAngleDeg()),
-				whiteStyle);
-
-		panel.add(headingLabel)
-				.padBottom(20f)
-				.row();
-
-		Slider slider = new Slider(
-				0f,
-				360f,
-				1f,
-				false,
-				sliderStyle);
-
-		slider.setValue(sail.getSteerAngleDeg());
-
-		slider.addListener(new ChangeListener() {
-			@Override
-			public void changed(ChangeEvent event,
-					Actor actor) {
-
-				float angle = slider.getValue();
-
-				headingLabel.setText(
-						"Heading: "
-								+ formatBearing(angle));
-
-				events.post(
-						new SailSteerEvent(angle));
-			}
-		});
-
-		panel.add(slider)
-				.width(500f)
-				.padBottom(30f)
-				.row();
-
-		TextButton close = new TextButton(
-				"Close",
-				buttonStyle);
-
-		close.addListener(new ChangeListener() {
-			@Override
-			public void changed(ChangeEvent event,
-					Actor actor) {
-				closeBuildingPanel();
-			}
-		});
-
-		panel.add(close)
-				.width(180f)
-				.height(60f);
-
-		return panel;
-	}
-
-	private Table buildGenericPanel(Building building) {
-
-		Table panel = createOverlay(building.getName());
-
-		panel.add(
-				new Label(
-						building.getName(),
-						whiteStyle))
-				.expand()
-				.center()
-				.row();
-
-		TextButton close = new TextButton(
-				"Close",
-				buttonStyle);
-
-		close.addListener(new ChangeListener() {
-			@Override
-			public void changed(ChangeEvent event,
-					Actor actor) {
-				closeBuildingPanel();
-			}
-		});
-
-		panel.add(close)
-				.width(180f)
-				.height(60f);
-
-		return panel;
-	}
-
-	private Table createOverlay(String title) {
-
-		Texture bg = Util.generateTexture(
-				new Color(0f, 0f, 0f, 0.85f));
-
-		disposables.add(bg);
-
-		Table root = new Table();
-		root.setFillParent(true);
-
-		root.setBackground(
-				new TextureRegionDrawable(bg));
-
-		root.center();
-		root.defaults().pad(10f);
-
-		Label titleLabel = new Label(title, whiteStyle);
-
-		root.add(titleLabel).padBottom(25f).row();
-
-		return root;
-	}
-
-	// ── Private helpers ───────────────────────────────────────────────────────
-
 	private static ProgressBar makeStatBar(Texture bg, Texture fill) {
-		ProgressBar.ProgressBarStyle style = new ProgressBar.ProgressBarStyle();
+		ProgressBarStyle style = new ProgressBarStyle();
 		style.background = new TextureRegionDrawable(bg);
 		style.knobBefore = new TextureRegionDrawable(fill);
 		style.knob = new TextureRegionDrawable(fill);
@@ -466,15 +321,5 @@ class HUDRenderer implements Disposable {
 			}
 		}
 		return sb.append(')').toString();
-	}
-
-	/**
-	 * Formats a bearing in degrees as a human-readable string, e.g. "45° NE".
-	 */
-	private static String formatBearing(float deg) {
-		deg = ((deg % 360f) + 360f) % 360f;
-		String[] cardinals = { "N", "NE", "E", "SE", "S", "SW", "W", "NW", "N" };
-		int idx = (int) Math.round(deg / 45.0) % 8;
-		return (int) deg + "°  " + cardinals[idx];
 	}
 }

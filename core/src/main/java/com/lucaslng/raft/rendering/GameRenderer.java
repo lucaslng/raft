@@ -16,6 +16,7 @@ import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.assets.Assets;
 import com.lucaslng.raft.entity.OceanTrash;
 import com.lucaslng.raft.event.EventBus;
+import com.lucaslng.raft.rendering.hud.HUDRenderer;
 import com.lucaslng.raft.world.World;
 
 public class GameRenderer implements Disposable {

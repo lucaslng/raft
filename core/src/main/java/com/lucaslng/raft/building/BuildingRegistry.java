@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -52,6 +54,9 @@ public class BuildingRegistry {
 		}
 		sailModel.calculateTransforms();
 
+		for (Material m : sailModel.materials) {
+			m.set(IntAttribute.createCullFace(0));
+		}
 		register(
 				SailBuilding.NAME,
 				() -> new SailBuilding(sailModel, raftSystem, windDir, events),
