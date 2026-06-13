@@ -76,18 +76,4 @@ public abstract class Building implements Disposable {
 	 */
 	public void onClicked(EventBus events) {
 	}
-
-	/** Override to release subclass-specific resources. */
-	protected void doDispose() {
-	}
-
-	@Override
-	public final void dispose() {
-		doDispose();
-		// If the subclass provided a body it's responsible for disposing the
-		// shape and motion state inside doDispose(); we just release the body ref.
-		btRigidBody b = getBody();
-		if (b != null)
-			b.dispose();
-	}
 }

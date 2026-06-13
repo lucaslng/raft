@@ -38,7 +38,7 @@ public class GameRenderer implements Disposable {
 
 	private final List<ModelInstance> opaque = new ArrayList<>();
 
-	private boolean isDebug = false;
+	private boolean isDebug = true;
 
 	public GameRenderer(Assets assets, World world, EventBus events) {
 		this.world = world;

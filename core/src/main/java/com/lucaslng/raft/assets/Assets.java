@@ -56,6 +56,7 @@ public class Assets extends AssetManager {
 		// raft
 		load("models/platform.g3db", Model.class);
 		load("models/water-filter/water-filter.g3dj", Model.class);
+		load("models/sail/sail.g3dj", Model.class);
 
 		// sfx
 		load("sfx/tile-placed.mp3", Sound.class);

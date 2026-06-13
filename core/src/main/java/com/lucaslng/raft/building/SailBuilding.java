@@ -4,10 +4,18 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.bullet.collision.Collision;
+import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
+import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
+import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
+import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody.btRigidBodyConstructionInfo;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.events.BuildingClickedEvent;
 import com.lucaslng.raft.event.events.SailSteerEvent;
+import com.lucaslng.raft.physics.MotionState;
 import com.lucaslng.raft.raft.RaftSystem;
+import com.lucaslng.raft.util.Util;
 
 /**
  * A sail that allows the player to steer the raft independently of the wind.
@@ -50,6 +58,10 @@ public class SailBuilding extends Building {
 	private final Vector2 windDir;
 	private final EventBus events;
 
+	private final btRigidBody body;
+	private final btBoxShape shape;
+	private final MotionState motionState;
+
 	/** Current steering angle, degrees clockwise from +Z. Default = wind angle. */
 	private float steerAngleDeg;
 
@@ -67,6 +79,16 @@ public class SailBuilding extends Building {
 			steerAngleDeg = e.angleDegrees;
 			raftSystem.setSailDirection(fromDeg(steerAngleDeg));
 		});
+
+		Vector3 dimensions = Util.getDimensions(this.model);
+		shape = new btBoxShape(dimensions);
+		motionState = new MotionState(this.model.transform, dimensions.y);
+		btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(1f, motionState, shape);
+		body = new btRigidBody(info);
+		info.dispose();
+		body.setCollisionFlags(body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT);
+		body.setActivationState(Collision.DISABLE_DEACTIVATION);
+		body.userData = this;
 	}
 
 	// ── Building lifecycle ────────────────────────────────────────────────────
@@ -80,17 +102,16 @@ public class SailBuilding extends Building {
 
 	@Override
 	public void update(float delta) {
-		// Rotate the sail model to face the steering direction (Y-axis yaw).
-		float yawRad = MathUtils.degreesToRadians * steerAngleDeg;
-		model.transform.getTranslation(new com.badlogic.gdx.math.Vector3()); // keep position
-		// Re-apply: keep translation, update rotation around Y
-		com.badlogic.gdx.math.Vector3 pos = model.transform.getTranslation(new com.badlogic.gdx.math.Vector3());
-		model.transform.setToTranslation(pos).rotate(com.badlogic.gdx.math.Vector3.Y, -steerAngleDeg);
 	}
 
 	@Override
 	public String getName() {
 		return NAME;
+	}
+
+	@Override
+	public btRigidBody getBody() {
+		return body;
 	}
 
 	/**
@@ -112,10 +133,14 @@ public class SailBuilding extends Building {
 	}
 
 	@Override
-	protected void doDispose() {
+	public void dispose() {
 		raftSystem.setSailMultiplier(0f);
 		// Reset drift direction back to wind
 		raftSystem.setSailDirection(new Vector2(windDir));
+
+		body.dispose();
+		shape.dispose();
+		motionState.dispose();
 	}
 
 	// ── Helpers ───────────────────────────────────────────────────────────────

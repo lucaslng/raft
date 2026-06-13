@@ -3,6 +3,7 @@ package com.lucaslng.raft.building;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.bullet.collision.Collision;
 import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
@@ -21,6 +22,8 @@ public class WaterFilter extends Building {
     public static final float THIRST_RESTORE = 0.08f;
 
     private final btRigidBody body;
+    private final btBoxShape shape;
+    private final MotionState motionState;
 
     private final EventBus events;
     private float timer = 0f;
@@ -30,12 +33,13 @@ public class WaterFilter extends Building {
         this.events = events;
 
         Vector3 dimensions = Util.getDimensions(this.model);
-        btBoxShape shape = new btBoxShape(dimensions);
-        MotionState motionState = new MotionState(this.model.transform, dimensions.y);
+         shape = new btBoxShape(dimensions);
+        motionState = new MotionState(this.model.transform, dimensions.y);
         btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(1f, motionState, shape);
         body = new btRigidBody(info);
         info.dispose();
         body.setCollisionFlags(body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT);
+        body.setActivationState(Collision.DISABLE_DEACTIVATION);
         body.userData = this;
     }
 
@@ -64,6 +68,13 @@ public class WaterFilter extends Building {
     @Override
     public void onClicked(EventBus events) {
         events.post(new BuildingClickedEvent(this));
+    }
+
+    @Override
+    public void dispose() {
+        body.dispose();
+        shape.dispose();
+        motionState.dispose();
     }
 
     // No extra resources to clean up — model is shared and disposed via Assets.

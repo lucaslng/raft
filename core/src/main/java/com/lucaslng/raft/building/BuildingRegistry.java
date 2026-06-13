@@ -8,7 +8,9 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.lucaslng.raft.assets.Assets;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.player.holdable.BuildingItem;
@@ -44,9 +46,12 @@ public class BuildingRegistry {
 				Map.of()); // TODO
 
 		// ── Sail ──────────────────────────────────────────────────────────────
-		// The sail model is loaded from assets. If a dedicated sail model is not
-		// available, the platform tile model is used as a stand-in.
-		Model sailModel = assets.get("models/platform.g3db", Model.class);
+		Model sailModel = assets.get("models/sail/sail.g3dj", Model.class);
+		for (Node node : sailModel.nodes) {
+			node.rotation.set(Vector3.Z, 0f);
+		}
+		sailModel.calculateTransforms();
+
 		register(
 				SailBuilding.NAME,
 				() -> new SailBuilding(sailModel, raftSystem, windDir, events),
