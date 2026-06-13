@@ -17,7 +17,7 @@ public class Main extends Game {
         assets = new Assets();
         new Settings();
         screenManager = new ScreenManager(this);
-        screenManager.replace(new LoadingScreen(assets, screenManager));
+        screenManager.replace(new LoadingScreen());
     }
 
     @Override

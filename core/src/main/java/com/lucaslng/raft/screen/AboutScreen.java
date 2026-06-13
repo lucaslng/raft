@@ -22,7 +22,8 @@ class AboutScreen implements Screen {
 	private final Stage stage;
 	private final List<Disposable> disposables = new ArrayList<>();
 
-	protected AboutScreen(ScreenManager screenManager) {
+	protected AboutScreen() {
+		ScreenManager screenManager = ScreenManager.get();
 		Assets assets = Assets.get();
 		Skin skin = assets.get("skin/golden-ui-skin.json", Skin.class);
 

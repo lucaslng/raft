@@ -19,16 +19,15 @@ import com.lucaslng.raft.util.Util;
 
 public class LoadingScreen implements Screen {
 
-	private Assets assets;
-	private ScreenManager screenManager;
-	private Stage stage;
-	private ProgressBar progressBar;
-	private List<Disposable> disposables;
+	private final Assets assets;
+	private final ScreenManager screenManager;
+	private final Stage stage;
+	private final ProgressBar progressBar;
+	private final List<Disposable> disposables = new ArrayList<>();
 
-	public LoadingScreen(Assets assets, ScreenManager screenManager) {
-		this.assets = assets;
-		this.screenManager = screenManager;
-		disposables = new ArrayList<>();
+	public LoadingScreen() {
+		assets = Assets.get();
+		screenManager = ScreenManager.get();
 
 		stage = new Stage(new ExtendViewport(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight()));
 		disposables.add(stage);
@@ -47,7 +46,7 @@ public class LoadingScreen implements Screen {
 	@Override
 	public void render(float delta) {
 		if (assets.update()) {
-			screenManager.replace(new MainMenuScreen(assets, screenManager));
+			screenManager.replace(new MainMenuScreen());
 		}
 
 		float progress = assets.getProgress();

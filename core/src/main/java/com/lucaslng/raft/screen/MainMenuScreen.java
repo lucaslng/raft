@@ -18,11 +18,12 @@ import com.lucaslng.raft.assets.Assets;
 
 class MainMenuScreen implements Screen {
 
-	private Stage stage;
-	private List<Disposable> disposables;
+	private final Stage stage;
+	private final List<Disposable> disposables = new ArrayList<>();
 
-	protected MainMenuScreen(Assets assets, ScreenManager screenManager) {
-		disposables = new ArrayList<>();
+	protected MainMenuScreen() {
+		Assets assets = Assets.get();
+		ScreenManager screenManager = ScreenManager.get();
 
 		Skin skin = assets.get("skin/golden-ui-skin.json", Skin.class);
 
@@ -40,7 +41,7 @@ class MainMenuScreen implements Screen {
 		TextButton playButton = new TextButton("Play", skin);
 		playButton.addListener(new ChangeListener() {
 			public void changed(ChangeEvent event, Actor actor) {
-				screenManager.push(new GameScreen(screenManager));
+				screenManager.push(new GameScreen());
 			}
 		});
 		table.add(playButton).width(300f).row();
@@ -48,7 +49,7 @@ class MainMenuScreen implements Screen {
 		TextButton instructionsButton = new TextButton("Instructions", skin);
 		instructionsButton.addListener(new ChangeListener() {
 			public void changed(ChangeEvent event, Actor actor) {
-				screenManager.push(new InstructionsScreen(screenManager));
+				screenManager.push(new InstructionsScreen());
 			}
 		});
 		table.add(instructionsButton).width(300f).row();
@@ -56,7 +57,7 @@ class MainMenuScreen implements Screen {
 		TextButton settingsButton = new TextButton("Settings", skin);
 		settingsButton.addListener(new ChangeListener() {
 			public void changed(ChangeEvent event, Actor actor) {
-				screenManager.push(new SettingsScreen(screenManager));
+				screenManager.push(new SettingsScreen());
 			}
 		});
 		table.add(settingsButton).width(300f).row();
@@ -64,7 +65,7 @@ class MainMenuScreen implements Screen {
 		TextButton aboutButton = new TextButton("About", skin);
 		aboutButton.addListener(new ChangeListener() {
 			public void changed(ChangeEvent event, Actor actor) {
-				screenManager.push(new AboutScreen(screenManager));
+				screenManager.push(new AboutScreen());
 			}
 		});
 		table.add(aboutButton).width(300f).row();

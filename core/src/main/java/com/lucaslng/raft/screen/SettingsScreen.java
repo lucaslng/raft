@@ -21,9 +21,10 @@ class SettingsScreen implements Screen {
 	private final List<Disposable> disposables = new ArrayList<>();
 	private final Settings settings;
 
-	protected SettingsScreen(ScreenManager screenManager) {
+	protected SettingsScreen() {
 		settings = Settings.get();
 		Assets assets = Assets.get();
+		ScreenManager screenManager = ScreenManager.get();
 
 		Skin skin = assets.getSkin();
 

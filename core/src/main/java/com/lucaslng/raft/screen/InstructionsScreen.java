@@ -22,7 +22,8 @@ class InstructionsScreen implements Screen {
 	private Stage stage;
 	private final List<Disposable> disposables = new ArrayList<>();
 
-	protected InstructionsScreen(ScreenManager screenManager) {
+	protected InstructionsScreen() {
+		ScreenManager screenManager = ScreenManager.get();
 		Assets assets = Assets.get();
 		Skin skin = assets.get("skin/golden-ui-skin.json", Skin.class);
 		

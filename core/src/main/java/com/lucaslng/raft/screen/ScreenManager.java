@@ -11,7 +11,11 @@ public class ScreenManager implements Disposable {
 	private final Main game;
 	private final Stack<Screen> stack;
 
+	private static ScreenManager instance;
+
 	public ScreenManager(Main game) {
+		instance = this;
+		
 		this.game = game;
 		stack = new Stack<>();
 	}
@@ -45,6 +49,10 @@ public class ScreenManager implements Disposable {
 	public void dispose() {
 		for (Screen screen : stack)
 			screen.dispose();
+	}
+
+	public static ScreenManager get() {
+		return instance;
 	}
 	
 }

@@ -37,7 +37,7 @@ class GameScreen implements Screen {
 	private final Settings keybinds;
 	private final PerspectiveCamera cam;
 
-	protected GameScreen(ScreenManager screenManager) {
+	protected GameScreen() {
 		events = new EventBus();
 		world = new World();
 
