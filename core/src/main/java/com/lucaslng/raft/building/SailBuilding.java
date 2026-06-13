@@ -61,6 +61,8 @@ public class SailBuilding extends Building {
 	private final btBoxShape shape;
 	private final MotionState motionState;
 
+	private final Vector3 dims;
+
 	/** Current steering angle, degrees clockwise from +Z. Default = wind angle. */
 	private float steerAngleDeg;
 
@@ -78,9 +80,9 @@ public class SailBuilding extends Building {
 			raftSystem.setSailDirection(fromDeg(steerAngleDeg));
 		});
 
-		Vector3 dimensions = Util.getDimensions(this.model);
-		shape = new btBoxShape(dimensions);
-		motionState = new MotionState(this.model.transform, dimensions.y);
+		dims = Util.getDimensions(this.model);
+		shape = new btBoxShape(dims);
+		motionState = new MotionState(this.model.transform, 0f);
 		btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(1f, motionState, shape);
 		body = new btRigidBody(info);
 		info.dispose();
@@ -93,7 +95,9 @@ public class SailBuilding extends Building {
 
 	@Override
 	public void setPosition(com.badlogic.gdx.math.Vector3 worldPos) {
-		super.setPosition(worldPos);
+		Vector3 p = worldPos.cpy();
+		p.y += dims.y;
+		super.setPosition(p);
 		raftSystem.setSailMultiplier(DRIFT_MULTIPLIER);
 		raftSystem.setSailDirection(fromDeg(steerAngleDeg));
 	}
