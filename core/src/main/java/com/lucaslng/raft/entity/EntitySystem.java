@@ -4,7 +4,6 @@ import java.util.*;
 
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.utils.Disposable;
-import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.physics.PhysicsSystem;
 
 /**

@@ -7,7 +7,6 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.utils.Disposable;
-import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.world.Clickable;
 
 public abstract class Entity implements Disposable, Clickable {
