@@ -36,6 +36,7 @@ public class Assets extends AssetManager {
 		
 		// fonts
 		loadDefaultFont(18, "main18.ttf");
+		loadDefaultFont(42, "main42.ttf");
 		loadDefaultFont(36, "mainBig.ttf");
 		loadDefaultFont(100, "title.ttf");
 
