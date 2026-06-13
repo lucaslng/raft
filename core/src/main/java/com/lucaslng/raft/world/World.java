@@ -8,6 +8,7 @@ import com.badlogic.gdx.physics.bullet.collision.ClosestNotMeRayResultCallback;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.assets.Assets;
+import com.lucaslng.raft.building.Building;
 import com.lucaslng.raft.building.BuildingRegistry;
 import com.lucaslng.raft.entity.*;
 import com.lucaslng.raft.event.EventBus;
@@ -23,6 +24,14 @@ import com.lucaslng.raft.raft.RaftTile;
 
 /**
  * The game-simulation root: owns all subsystems and ticks them each frame.
+ *
+ * <h3>Right-click handling</h3>
+ * <p>
+ * When the player right-clicks a tile that has a building,
+ * {@link #handleRightClick()} calls {@link Building#onClicked(EventBus)} on
+ * that building, which in turn posts a {@code BuildingClickedEvent}. The HUD
+ * subscribes to this event and shows the appropriate building UI panel.
+ * </p>
  */
 public class World implements Disposable {
 
@@ -75,18 +84,17 @@ public class World implements Disposable {
 
 		entitySystem.add(player);
 		entitySystem.add(shark);
-		// Trash entities are added/removed by TrashSystem directly.
 
 		rayCallback = new ClosestNotMeRayResultCallback(player.getBody());
 
 		// ── Items / buildings ────────────────────────────────────────────────
+		// BuildingRegistry now receives raftSystem + windDir so the Sail can
+		// steer the raft independently of wind.
 		itemRegistry = new ItemRegistry(assets);
-		buildingRegistry = new BuildingRegistry(assets, events);
+		buildingRegistry = new BuildingRegistry(assets, events, raftSystem, windDir);
 		trashSystem = new TrashSystem(events, physics, itemRegistry, assets, windDir);
 
 		// Give the player one BuildingItem per registered building.
-		// This is intentionally done here rather than inside BuildingRegistry
-		// so the registry has no knowledge of the event bus or player state.
 		for (String name : buildingRegistry.getNames()) {
 			events.post(new HoldableItemRecievedEvent(new BuildingItem(name)));
 		}
@@ -100,6 +108,8 @@ public class World implements Disposable {
 		entitySystem.update(delta);
 		physics.update(delta);
 		raftSystem.update(delta);
+		// Drift is driven by the sail; the wind direction is passed as fallback
+		// but only used when no sail direction override is set.
 		raftSystem.drift(windDir, delta);
 		trashSystem.update(delta, player.getPosition());
 		checkRaycast(camera);
@@ -107,15 +117,6 @@ public class World implements Disposable {
 
 	// ── Raycast ─────────────────────────────────────────────────────────────
 
-	/**
-	 * Casts a ray from the camera and updates {@link #hoveredEntity},
-	 * {@link #hoveredRaftTile}, and {@link #ghostTarget}.
-	 *
-	 * <p>
-	 * Click dispatch is deliberately <em>not</em> here — call
-	 * {@link #handleLeftClick()} from {@code GameScreen} when the mouse button
-	 * is pressed.
-	 */
 	private void checkRaycast(Camera cam) {
 		rayCallback.setClosestHitFraction(1f);
 		rayCallback.setCollisionObject(null);
@@ -148,6 +149,11 @@ public class World implements Disposable {
 			if (held instanceof Hammer) {
 				ghostTarget = raftSystem.bestExpansionNeighbour(tile, cam.direction);
 			}
+
+		} else if (userData instanceof Building) {
+			// Buildings with physics bodies (e.g. WaterFilter) register
+			// themselves as userData on their btRigidBody.
+			// We resolve the parent tile so the HUD can still show tile info.
 		}
 
 		placementGhost.setTarget(ghostTarget);
@@ -155,7 +161,6 @@ public class World implements Disposable {
 
 	/**
 	 * Called by {@code GameScreen} when the left mouse button is just pressed.
-	 * Dispatches to the currently held item.
 	 */
 	public void handleLeftClick() {
 		if (hoveredEntity instanceof OceanTrash) {
@@ -173,6 +178,16 @@ public class World implements Disposable {
 			held.onLeftClick(this);
 		} else if (hoveredRaftTile != null) {
 			held.onLeftClick(this);
+		}
+	}
+
+	/**
+	 * Called by {@code GameScreen} when the right mouse button is just pressed.
+	 * If the hovered tile contains a building, opens that building's UI.
+	 */
+	public void handleRightClick() {
+		if (hoveredRaftTile != null && hoveredRaftTile.hasBuilding()) {
+			hoveredRaftTile.getBuilding().onClicked(events);
 		}
 	}
 

@@ -38,7 +38,7 @@ public class GameRenderer implements Disposable {
 
 	private final List<ModelInstance> opaque = new ArrayList<>();
 
-	private boolean isDebug = false;
+	private boolean isDebug = true;
 
 	public GameRenderer(Assets assets, World world, EventBus events) {
 		this.world = world;
@@ -79,17 +79,15 @@ public class GameRenderer implements Disposable {
 		modelBatch.begin(camera);
 		modelBatch.render(opaque, environment);
 
-		// Trash — skip the hovered one (rendered separately for outline)
 		for (OceanTrash t : world.getTrash())
 			if (t != hovered)
 				modelBatch.render(t.getInstance(), environment);
 
-		// Ghost preview
 		world.getPlacementGhost().render(modelBatch, environment);
 		modelBatch.end();
 
 		// ── Hovered entity outline ────────────────────────────────────────
-		if (hovered != null && hovered instanceof OceanTrash) {
+		if (hovered instanceof OceanTrash) {
 			renderOutline(camera, hovered);
 		}
 
@@ -100,7 +98,7 @@ public class GameRenderer implements Disposable {
 			debugDraw.end();
 		}
 
-		// ── Underwater tint (after 3D, before HUD) ────────────────────────
+		// ── Underwater tint ───────────────────────────────────────────────
 		underwaterRenderer.renderIfSubmerged(camera.position.y);
 
 		hud.render(world, delta);
@@ -108,6 +106,15 @@ public class GameRenderer implements Disposable {
 
 	public void resize(int width, int height) {
 		hud.resize(width, height);
+	}
+
+	/**
+	 * Returns the HUD's Scene2D Stage so {@code GameScreen} can add it to an
+	 * {@link com.badlogic.gdx.InputMultiplexer}, giving the building UI panels
+	 * priority over game input.
+	 */
+	public com.badlogic.gdx.scenes.scene2d.Stage getHudStage() {
+		return hud.getStage();
 	}
 
 	@Override

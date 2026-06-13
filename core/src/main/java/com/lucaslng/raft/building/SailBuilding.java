@@ -2,44 +2,106 @@ package com.lucaslng.raft.building;
 
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.bullet.collision.Collision;
+import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
+import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
+import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
+import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody.btRigidBodyConstructionInfo;
+import com.lucaslng.raft.event.EventBus;
+import com.lucaslng.raft.event.events.BuildingClickedEvent;
+import com.lucaslng.raft.event.events.SailSteerEvent;
+import com.lucaslng.raft.physics.MotionState;
 import com.lucaslng.raft.raft.RaftSystem;
+import com.lucaslng.raft.util.Util;
 
 /**
- * A sail that controls how much the raft drifts with the wind.
+ * A sail that allows the player to steer the raft independently of the wind.
  *
- * <p>When placed, the sail registers itself with the {@link RaftSystem} and
- * increases the drift multiplier. When removed (disposed), the multiplier is
- * reset to zero (anchored).
- *
- * <h3>Integration</h3>
- * Register in {@link BuildingRegistry}:
- * <pre>
- *   register("Sail", () -> new SailBuilding(sailModel, raftSystem),
- *            Map.of("String", 6, "Wood", 8));
- * </pre>
- *
- * <h3>Future work</h3>
+ * <h3>Drift behaviour</h3>
  * <ul>
- *   <li>Right-click or interact key could toggle the sail open/closed.</li>
- *   <li>Multiple sails stack the multiplier (capped at some maximum).</li>
- *   <li>Sail direction could be controlled to steer the raft.</li>
+ * <li>When placed the sail registers a drift multiplier with
+ * {@link RaftSystem},
+ * enabling raft movement.</li>
+ * <li>By default the raft drifts with the wind. The player can open the sail
+ * UI (right-click) and pick a custom heading; this overrides the wind
+ * direction via {@link RaftSystem#setSailDirection(Vector2)}.</li>
+ * <li>When the sail is destroyed the raft stops drifting and the sail direction
+ * is reset to wind direction.</li>
  * </ul>
+ *
+ * <h3>Steering</h3>
+ * <p>
+ * {@link SailSteerEvent} carries an angle in degrees (0 = +Z / north,
+ * clockwise). The sail converts this to a normalised {@link Vector2} and pushes
+ * it to the {@link RaftSystem}.
+ * </p>
+ *
+ * <h3>Registration</h3>
+ * 
+ * <pre>
+ * register("Sail", () -> new SailBuilding(sailModel, raftSystem, windDir, events),
+ * 		Map.of("String", 6, "Wood", 8));
+ * </pre>
  */
 public class SailBuilding extends Building {
 
-	public static final String NAME            = "Sail";
-	public static final float  DRIFT_MULTIPLIER = 2f; // world units per second
+	public static final String NAME = "Sail";
+	/**
+	 * Base drift speed in world-units / second (multiplied by RaftSystem speed).
+	 */
+	public static final float DRIFT_MULTIPLIER = 2f;
 
 	private final RaftSystem raftSystem;
+	private final Vector2 windDir;
+	private final EventBus events;
 
-	public SailBuilding(Model model, RaftSystem raftSystem) {
+	private final btRigidBody body;
+	private final btBoxShape shape;
+	private final MotionState motionState;
+
+	/** Current steering angle, degrees clockwise from +Z. Default = wind angle. */
+	private float steerAngleDeg;
+
+	public SailBuilding(Model model, RaftSystem raftSystem, Vector2 windDir, EventBus events) {
 		super(new ModelInstance(model));
 		this.raftSystem = raftSystem;
+		this.windDir = windDir;
+		this.events = events;
+
+		// Default heading follows the wind
+		steerAngleDeg = toDeg(windDir);
+
+		// Listen for steering updates from the UI
+		events.subscribe(SailSteerEvent.class, e -> {
+			steerAngleDeg = e.angleDegrees;
+			raftSystem.setSailDirection(fromDeg(steerAngleDeg));
+		});
+
+		Vector3 dimensions = Util.getDimensions(this.model);
+		shape = new btBoxShape(dimensions);
+		motionState = new MotionState(this.model.transform, dimensions.y);
+		btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(1f, motionState, shape);
+		body = new btRigidBody(info);
+		info.dispose();
+		body.setCollisionFlags(body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT);
+		body.setActivationState(Collision.DISABLE_DEACTIVATION);
+		body.userData = this;
+	}
+
+	// ── Building lifecycle ────────────────────────────────────────────────────
+
+	@Override
+	public void setPosition(com.badlogic.gdx.math.Vector3 worldPos) {
+		super.setPosition(worldPos);
+		raftSystem.setSailMultiplier(DRIFT_MULTIPLIER);
+		raftSystem.setSailDirection(fromDeg(steerAngleDeg));
 	}
 
 	@Override
 	public void update(float delta) {
-		// No per-tick logic yet. Future: animate sail cloth, react to wind gusts.
 	}
 
 	@Override
@@ -47,19 +109,56 @@ public class SailBuilding extends Building {
 		return NAME;
 	}
 
+	@Override
+	public btRigidBody getBody() {
+		return body;
+	}
+
 	/**
-	 * Called by {@link com.lucaslng.raft.raft.RaftTile#setBuilding(Building)}
-	 * immediately after placement. Enables raft drift.
+	 * Opens the sail steering UI.
 	 */
 	@Override
-	public void setPosition(com.badlogic.gdx.math.Vector3 worldPos) {
-		super.setPosition(worldPos);
-		raftSystem.setSailMultiplier(DRIFT_MULTIPLIER);
+	public void onClicked(EventBus events) {
+		events.post(new BuildingClickedEvent(this));
+	}
+
+	/** Returns the current steering angle so the UI can initialise correctly. */
+	public float getSteerAngleDeg() {
+		return steerAngleDeg;
+	}
+
+	/** Returns the wind direction so the UI can show it as a reference. */
+	public Vector2 getWindDir() {
+		return windDir;
 	}
 
 	@Override
-	protected void doDispose() {
-		// When the sail is destroyed the raft stops drifting.
+	public void dispose() {
 		raftSystem.setSailMultiplier(0f);
+		// Reset drift direction back to wind
+		raftSystem.setSailDirection(new Vector2(windDir));
+
+		body.dispose();
+		shape.dispose();
+		motionState.dispose();
+	}
+
+	// ── Helpers ───────────────────────────────────────────────────────────────
+
+	/**
+	 * Converts an angle in degrees (CW from +Z) to a normalised XZ Vector2.
+	 * +Z = 0°, +X = 90°, -Z = 180°, -X = 270°.
+	 */
+	public static Vector2 fromDeg(float deg) {
+		float rad = MathUtils.degreesToRadians * deg;
+		return new Vector2(MathUtils.sin(rad), MathUtils.cos(rad)).nor();
+	}
+
+	/**
+	 * Converts a normalised XZ direction to degrees clockwise from +Z.
+	 */
+	public static float toDeg(Vector2 dir) {
+		float deg = MathUtils.radiansToDegrees * MathUtils.atan2(dir.x, dir.y);
+		return (deg + 360f) % 360f;
 	}
 }
