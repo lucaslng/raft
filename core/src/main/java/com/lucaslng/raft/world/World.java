@@ -16,6 +16,7 @@ import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.item.ItemRegistry;
 import com.lucaslng.raft.physics.PhysicsSystem;
 import com.lucaslng.raft.player.holdable.Hammer;
+import com.lucaslng.raft.player.holdable.BuildingItem;
 import com.lucaslng.raft.player.holdable.Holdable;
 import com.lucaslng.raft.raft.PlacementGhost;
 import com.lucaslng.raft.raft.RaftSystem;
@@ -36,9 +37,7 @@ public class World implements Disposable {
 
 	// Raycast state
 	private Entity hoveredEntity;
-	// The raft tile the player is currently looking at (null if none).
 	private RaftTile hoveredRaftTile;
-	// Current ghost target cell
 	private Vector2 ghostTarget;
 
 	private ClosestNotMeRayResultCallback rayResultCallback;
@@ -64,6 +63,10 @@ public class World implements Disposable {
 		itemRegistry = new ItemRegistry(assets);
 		buildingRegistry = new BuildingRegistry(assets, events);
 		trashSystem = new TrashSystem(events, physics, itemRegistry, assets, windDir);
+
+		// Give the player one BuildingItem per registered building at game start.
+		// These are distributed via HoldableItemReceivedEvent → Hotbar.
+		buildingRegistry.giveStartingItems(events);
 	}
 
 	public void update(float delta, Camera camera) {
@@ -77,7 +80,6 @@ public class World implements Disposable {
 	}
 
 	private void checkRaycast(Camera cam) {
-		// Reset per-frame state
 		rayResultCallback.setClosestHitFraction(1f);
 		rayResultCallback.setCollisionObject(null);
 		hoveredEntity = null;
@@ -100,7 +102,6 @@ public class World implements Disposable {
 						t.onClicked(events);
 				}
 			} else if (userData instanceof RaftTile) {
-				// ── Player is looking at a raft tile ──────────────────────────
 				RaftTile tile = (RaftTile) userData;
 				hoveredRaftTile = tile;
 
@@ -112,6 +113,11 @@ public class World implements Disposable {
 					if (ghostTarget != null && Gdx.input.isButtonJustPressed(Buttons.LEFT)) {
 						held.onLeftClick(this);
 					}
+				} else if (held instanceof BuildingItem) {
+					// Left-click places the building on the hovered tile
+					if (Gdx.input.isButtonJustPressed(Buttons.LEFT)) {
+						held.onLeftClick(this);
+					}
 				} else if (held != null && Gdx.input.isButtonJustPressed(Buttons.LEFT)) {
 					held.onLeftClick(this);
 				}
@@ -120,6 +126,8 @@ public class World implements Disposable {
 
 		placementGhost.setTarget(ghostTarget);
 	}
+
+	// ── Getters ──────────────────────────────────────────────────────────────
 
 	public RaftSystem getRaftSystem() {
 		return raftSystem;

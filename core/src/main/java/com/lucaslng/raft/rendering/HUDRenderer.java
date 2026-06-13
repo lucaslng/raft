@@ -16,12 +16,14 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.lucaslng.raft.assets.Assets;
+import com.lucaslng.raft.building.BuildingRegistry;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.Subscriber;
 import com.lucaslng.raft.event.events.ToggleInventoryEvent;
 import com.lucaslng.raft.item.Item;
 import com.lucaslng.raft.player.Hotbar;
 import com.lucaslng.raft.player.PlayerStats;
+import com.lucaslng.raft.player.holdable.BuildingItem;
 import com.lucaslng.raft.player.holdable.Hammer;
 import com.lucaslng.raft.player.holdable.Holdable;
 import com.lucaslng.raft.raft.RaftTile;
@@ -35,7 +37,7 @@ class HUDRenderer implements Disposable {
 
 	private final Stage stage;
 	private final Label fpsLabel;
-	private final Label hintLabel;      // shows build cost / placement info
+	private final Label hintLabel;
 	private final List<Disposable> disposables;
 
 	private final ProgressBar healthBar, hungerBar, thirstBar;
@@ -48,12 +50,12 @@ class HUDRenderer implements Disposable {
 
 		BitmapFont mainFont = assets.get("main18.ttf", BitmapFont.class);
 		mainLabelStyle = new LabelStyle(mainFont, Color.WHITE);
-		hintLabelStyle  = new LabelStyle(mainFont, new Color(0.9f, 0.95f, 0.5f, 1f));
+		hintLabelStyle = new LabelStyle(mainFont, new Color(0.9f, 0.95f, 0.5f, 1f));
 
 		stage = new Stage(new ExtendViewport(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight()));
 		disposables.add(stage);
 
-		// ── FPS ─────────────────────────────────────────────────────────────
+		// ── FPS ──────────────────────────────────────────────────────────────
 		fpsLabel = new Label("", mainLabelStyle);
 		fpsLabel.addAction(new Action() {
 			@Override
@@ -65,20 +67,20 @@ class HUDRenderer implements Disposable {
 		Container<Label> fpsContainer = new Container<Label>(fpsLabel).bottom().left().padLeft(10f).padBottom(6f);
 		stage.addActor(fpsContainer);
 
-		// ── Crosshair ───────────────────────────────────────────────────────
+		// ── Crosshair ────────────────────────────────────────────────────────
 		Container<Image> crosshairContainer = new Container<>(
 				new Image(assets.get("images/crosshair-normal.png", Texture.class)));
 		crosshairContainer.setFillParent(true);
 		stage.addActor(crosshairContainer);
 		crosshairContainer.center().size(16f);
 
-		// ── Build-hint label (shown near the top centre when ghost is visible) ─
+		// ── Build-hint label ─────────────────────────────────────────────────
 		hintLabel = new Label("", hintLabelStyle);
-		Container<Label> hintContainer = new Container<>(hintLabel).top().center().padTop(20f);
+		Container<Label> hintContainer = new Container<>(hintLabel).top().center().padTop(30f);
 		hintContainer.setFillParent(true);
 		stage.addActor(hintContainer);
 
-		// ── Hotbar ──────────────────────────────────────────────────────────
+		// ── Hotbar ───────────────────────────────────────────────────────────
 		HorizontalGroup hotbar = new HorizontalGroup();
 		hotbar.setFillParent(true);
 		stage.addActor(hotbar);
@@ -95,11 +97,11 @@ class HUDRenderer implements Disposable {
 			hotbar.addActor(slot);
 		}
 
-		// ── Stat bars ───────────────────────────────────────────────────────
+		// ── Stat bars ────────────────────────────────────────────────────────
 		Texture barBgTexture = Util.generateTexture(Color.BROWN, 20);
-		Texture healthFill   = Util.generateTexture(new Color(0.85f, 0.15f, 0.15f, 1f), 20);
-		Texture hungerFill   = Util.generateTexture(new Color(0.90f, 0.65f, 0.10f, 1f), 20);
-		Texture thirstFill   = Util.generateTexture(new Color(0.20f, 0.55f, 0.90f, 1f), 20);
+		Texture healthFill = Util.generateTexture(new Color(0.85f, 0.15f, 0.15f, 1f), 20);
+		Texture hungerFill = Util.generateTexture(new Color(0.90f, 0.65f, 0.10f, 1f), 20);
+		Texture thirstFill = Util.generateTexture(new Color(0.20f, 0.55f, 0.90f, 1f), 20);
 		disposables.add(barBgTexture);
 		disposables.add(healthFill);
 		disposables.add(hungerFill);
@@ -118,7 +120,7 @@ class HUDRenderer implements Disposable {
 		statTable.bottom().left().pad(16);
 		stage.addActor(statTable);
 
-		// ── Inventory ───────────────────────────────────────────────────────
+		// ── Inventory ────────────────────────────────────────────────────────
 		inventoryTable = new Table();
 		inventoryTable.setFillParent(true);
 		inventoryTable.top().left().pad(14f);
@@ -138,8 +140,8 @@ class HUDRenderer implements Disposable {
 	private ProgressBar makeStatBar(Texture bg, Texture fill) {
 		ProgressBar.ProgressBarStyle style = new ProgressBar.ProgressBarStyle();
 		style.background = new TextureRegionDrawable(bg);
-		style.knobBefore  = new TextureRegionDrawable(fill);
-		style.knob        = new TextureRegionDrawable(fill);
+		style.knobBefore = new TextureRegionDrawable(fill);
+		style.knob = new TextureRegionDrawable(fill);
 		ProgressBar bar = new ProgressBar(0f, 1f, 0.001f, false, style);
 		bar.setValue(1f);
 		return bar;
@@ -151,33 +153,52 @@ class HUDRenderer implements Disposable {
 		hungerBar.setValue(stats.getHunger());
 		thirstBar.setValue(stats.getThirst());
 
-		// ── Build hint text ─────────────────────────────────────────────────
+		// ── Build hint text ──────────────────────────────────────────────────
 		Holdable held = world.getPlayer().getHotbar().getHeldItem();
+
 		if (held instanceof Hammer && world.getPlacementGhost().isVisible()) {
-			int wood      = world.getPlayer().getBackpack().getCount("Wood");
+			// Hammer: show tile placement cost
+			int wood = world.getPlayer().getBackpack().getCount("Wood");
 			boolean canBuild = wood >= Hammer.WOOD_COST;
 			String costStr = "[LMB] Place plank  (Wood: " + wood + " / " + Hammer.WOOD_COST + ")";
 			hintLabel.setStyle(new LabelStyle(hintLabel.getStyle().font,
 					canBuild ? new Color(0.4f, 1f, 0.4f, 1f) : new Color(1f, 0.4f, 0.4f, 1f)));
 			hintLabel.setText(costStr);
-		} else if (held != null) {
-			hintLabel.setStyle(new LabelStyle(hintLabel.getStyle().font, new Color(0.9f, 0.95f, 0.5f, 1f)));
-			// Show building placement hint when hovering an occupied/empty tile
+
+		} else if (held instanceof BuildingItem) {
+			// BuildingItem: show placement cost / affordability on a hovered tile
+			BuildingItem buildingItem = (BuildingItem) held;
 			RaftTile hoveredTile = world.getHoveredRaftTile();
-			if (hoveredTile != null && !(held instanceof Hammer)) {
+
+			if (hoveredTile != null) {
 				if (hoveredTile.hasBuilding()) {
+					hintLabel.setStyle(new LabelStyle(hintLabel.getStyle().font, new Color(0.9f, 0.95f, 0.5f, 1f)));
 					hintLabel.setText("Tile occupied: " + hoveredTile.getBuilding().getName());
 				} else {
-					hintLabel.setText("[LMB] Place " + held.getName());
+					// Check affordability
+					BuildingRegistry registry = world.getBuildingRegistry();
+					Map<String, Integer> cost = registry.getCost(buildingItem.getName());
+					boolean canAfford = canAffordAll(world, cost);
+
+					String costStr = buildCostString(buildingItem.getName(), world, cost);
+					hintLabel.setStyle(new LabelStyle(hintLabel.getStyle().font,
+							canAfford ? new Color(0.4f, 1f, 0.4f, 1f) : new Color(1f, 0.4f, 0.4f, 1f)));
+					hintLabel.setText(costStr);
 				}
 			} else {
-				hintLabel.setText("");
+				hintLabel.setStyle(new LabelStyle(hintLabel.getStyle().font, new Color(0.9f, 0.95f, 0.5f, 1f)));
+				hintLabel.setText(buildingItem.getName() + " - aim at an empty raft tile");
 			}
+
+		} else if (held != null) {
+			hintLabel.setStyle(new LabelStyle(hintLabel.getStyle().font, new Color(0.9f, 0.95f, 0.5f, 1f)));
+			hintLabel.setText("");
+
 		} else {
 			hintLabel.setText("");
 		}
 
-		// ── Inventory list ──────────────────────────────────────────────────
+		// ── Inventory list ───────────────────────────────────────────────────
 		Iterable<Map.Entry<Item, Integer>> items = world.getPlayer().getBackpack().getSortedBackpackView();
 		inventoryTable.clear();
 		for (Map.Entry<Item, Integer> i : items) {
@@ -189,6 +210,38 @@ class HUDRenderer implements Disposable {
 
 		stage.act(delta);
 		stage.draw();
+	}
+
+	// ── Helpers ──────────────────────────────────────────────────────────────
+
+	private boolean canAffordAll(World world, Map<String, Integer> cost) {
+		if (cost == null)
+			return false;
+		for (Map.Entry<String, Integer> entry : cost.entrySet()) {
+			if (world.getPlayer().getBackpack().getCount(entry.getKey()) < entry.getValue())
+				return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Builds a hint string like:
+	 * [LMB] Place Water Filter (String: 2/4 Wood: 4/4 Stone: 3/5)
+	 */
+	private String buildCostString(String buildingName, World world, Map<String, Integer> cost) {
+		StringBuilder sb = new StringBuilder("[LMB] Place ").append(buildingName).append("  (");
+		if (cost != null) {
+			boolean first = true;
+			for (Map.Entry<String, Integer> entry : cost.entrySet()) {
+				if (!first)
+					sb.append("  ");
+				first = false;
+				int have = world.getPlayer().getBackpack().getCount(entry.getKey());
+				sb.append(entry.getKey()).append(": ").append(have).append('/').append(entry.getValue());
+			}
+		}
+		sb.append(')');
+		return sb.toString();
 	}
 
 	protected void resize(int width, int height) {

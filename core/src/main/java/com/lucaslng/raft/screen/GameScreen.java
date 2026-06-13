@@ -13,9 +13,7 @@ import com.lucaslng.raft.world.World;
 import com.lucaslng.raft.assets.Assets;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.Subscriber;
-import com.lucaslng.raft.event.events.HotbarIndexEvent;
-import com.lucaslng.raft.event.events.TilePlacedEvent;
-import com.lucaslng.raft.event.events.ToggleInventoryEvent;
+import com.lucaslng.raft.event.events.*;
 import com.lucaslng.raft.input.InputManager;
 
 class GameScreen implements Screen {
@@ -54,6 +52,13 @@ class GameScreen implements Screen {
 			}
 		});
 
+		events.subscribe(BuildingPlacedEvent.class, new Subscriber<BuildingPlacedEvent>() {
+			Sound sfx = assets.get("sfx/building-placed.mp3", Sound.class);
+			@Override
+			public void accept(BuildingPlacedEvent event) {
+				sfx.play(.9f);
+			}
+		});
 	}
 
 	@Override

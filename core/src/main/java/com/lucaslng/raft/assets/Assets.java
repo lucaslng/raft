@@ -59,6 +59,7 @@ public class Assets extends AssetManager {
 
 		// sfx
 		load("sfx/tile-placed.mp3", Sound.class);
+		load("sfx/building-placed.mp3", Sound.class);
 	}
 
 	private void loadDefaultFont(int size, String name) {
