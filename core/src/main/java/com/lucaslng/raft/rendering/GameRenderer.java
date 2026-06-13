@@ -26,7 +26,6 @@ public class GameRenderer implements Disposable {
 	private final HUDRenderer hud;
 	private final OceanRenderer ocean;
 	private final ModelBatch modelBatch = new ModelBatch();
-	private final List<ModelInstance> instances = new ArrayList<>();
 	private final DebugDrawer debugDraw = new DebugDrawer();
 	private final World world;
 	private final Iterable<OceanTrash> trash;
@@ -37,10 +36,6 @@ public class GameRenderer implements Disposable {
 		this.assets = assets;
 		this.world = world;
 		this.trash = world.getTrash();
-
-		instances.add(world.getRaft().getInstance());
-		instances.add(world.getPlayer().getInstance());
-		instances.add(world.getShark().getInstance());
 
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
 		environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, .54f, -.76f, -.36f));
@@ -60,17 +55,32 @@ public class GameRenderer implements Disposable {
 		skybox.render(camera);
 		ocean.render(camera, delta);
 
+		// ── Collect opaque instances ───────────────────────────────────────
+		List<ModelInstance> opaqueInstances = new ArrayList<>();
+		opaqueInstances.add(world.getPlayer().getInstance());
+		opaqueInstances.add(world.getShark().getInstance());
+		// Raft tiles + buildings
+		for (ModelInstance mi : world.getRaftSystem().getInstances()) {
+			opaqueInstances.add(mi);
+		}
+
 		modelBatch.begin(camera);
-		modelBatch.render(instances, environment);
+		modelBatch.render(opaqueInstances, environment);
+
+		// Ocean trash (exclude hovered entity for outline pass)
 		for (OceanTrash t : trash)
 			if (t != world.getHoveredEntity())
 				modelBatch.render(t.getInstance(), environment);
+
+		// ── Ghost preview (translucent, inside the same batch) ────────────
+		world.getPlacementGhost().render(modelBatch, environment);
+
 		modelBatch.end();
 
+		// ── Outline pass for hovered ocean trash ──────────────────────────
 		if (world.getHoveredEntity() != null) {
 			ModelInstance hoveredInstance = world.getHoveredEntity().getInstance();
 
-			// draw original with stencil
 			Gdx.gl.glEnable(GL20.GL_STENCIL_TEST);
 			Gdx.gl.glStencilFunc(GL20.GL_ALWAYS, 1, 0xFF);
 			Gdx.gl.glStencilOp(GL20.GL_KEEP, GL20.GL_KEEP, GL20.GL_REPLACE);
@@ -80,7 +90,6 @@ public class GameRenderer implements Disposable {
 			modelBatch.render(hoveredInstance, environment);
 			modelBatch.end();
 
-			// draw outline using scaled up model
 			Gdx.gl.glStencilFunc(GL20.GL_NOTEQUAL, 1, 0xFF);
 			Gdx.gl.glStencilMask(0x00);
 			Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
@@ -90,7 +99,7 @@ public class GameRenderer implements Disposable {
 			modelBatch.render(hoveredInstance, outlineEnvironment);
 			modelBatch.end();
 
-			hoveredInstance.transform.set(original); // restore transform
+			hoveredInstance.transform.set(original);
 
 			Gdx.gl.glStencilMask(0xFF);
 			Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
@@ -110,6 +119,7 @@ public class GameRenderer implements Disposable {
 		hud.resize(width, height);
 	}
 
+	@Override
 	public void dispose() {
 		debugDraw.dispose();
 		skybox.dispose();

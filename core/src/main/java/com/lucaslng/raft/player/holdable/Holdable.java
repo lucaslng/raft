@@ -1,7 +1,5 @@
 package com.lucaslng.raft.player.holdable;
 
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.lucaslng.raft.world.World;
 
 // Buildings, tools, and other misc stuff

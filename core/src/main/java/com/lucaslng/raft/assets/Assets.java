@@ -2,6 +2,7 @@ package com.lucaslng.raft.assets;
 
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -17,13 +18,15 @@ public class Assets extends AssetManager {
 	public Assets() {
 		super();
 
+		// setup font loader
 		setLoader(FreeTypeFontGenerator.class, new FreeTypeFontGeneratorLoader(getFileHandleResolver()));
 		setLoader(BitmapFont.class, ".ttf", new FreetypeFontLoader(getFileHandleResolver()));
 		setLoader(BitmapFont.class, ".otf", new FreetypeFontLoader(getFileHandleResolver()));
 
+		// ui skin
 		load("skin/golden-ui-skin.json", Skin.class);
 		
-		load("models/platform.g3db", Model.class);
+		// floating items
 		load("models/debris-wood.g3db", Model.class);
 		load("models/debris-stone.g3db", Model.class);
 		load("models/string.g3db", Model.class);
@@ -31,21 +34,31 @@ public class Assets extends AssetManager {
 
 		load("images/crosshair-normal.png", Texture.class);
 		
+		// fonts
 		loadDefaultFont(18, "main18.ttf");
 		loadDefaultFont(36, "mainBig.ttf");
 		loadDefaultFont(100, "title.ttf");
 
+		// backgrounds
 		load("images/2.png", Texture.class);
 		load("images/3.png", Texture.class);
 
-
+		// background music
 		load("music/The Pirate's Waltz.mp3", Music.class);
 
+		// entities
 		load("models/character-male.g3dj", Model.class);
-		
 		load("models/shark.g3dj", Model.class);
 
+		// textures
 		load("textures/sprites.atlas", TextureAtlas.class);
+
+		// raft
+		load("models/platform.g3db", Model.class);
+		load("models/water-filter/water-filter.g3dj", Model.class);
+
+		// sfx
+		load("sfx/tile-placed.mp3", Sound.class);
 	}
 
 	private void loadDefaultFont(int size, String name) {

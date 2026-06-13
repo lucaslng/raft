@@ -22,15 +22,20 @@ import com.lucaslng.raft.event.events.ToggleInventoryEvent;
 import com.lucaslng.raft.item.Item;
 import com.lucaslng.raft.player.Hotbar;
 import com.lucaslng.raft.player.PlayerStats;
+import com.lucaslng.raft.player.holdable.Hammer;
+import com.lucaslng.raft.player.holdable.Holdable;
+import com.lucaslng.raft.raft.RaftTile;
 import com.lucaslng.raft.util.Util;
 import com.lucaslng.raft.world.World;
 
 class HUDRenderer implements Disposable {
 
 	private final LabelStyle mainLabelStyle;
+	private final LabelStyle hintLabelStyle;
 
 	private final Stage stage;
 	private final Label fpsLabel;
+	private final Label hintLabel;      // shows build cost / placement info
 	private final List<Disposable> disposables;
 
 	private final ProgressBar healthBar, hungerBar, thirstBar;
@@ -43,11 +48,12 @@ class HUDRenderer implements Disposable {
 
 		BitmapFont mainFont = assets.get("main18.ttf", BitmapFont.class);
 		mainLabelStyle = new LabelStyle(mainFont, Color.WHITE);
+		hintLabelStyle  = new LabelStyle(mainFont, new Color(0.9f, 0.95f, 0.5f, 1f));
 
 		stage = new Stage(new ExtendViewport(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight()));
 		disposables.add(stage);
 
-		// fps
+		// ── FPS ─────────────────────────────────────────────────────────────
 		fpsLabel = new Label("", mainLabelStyle);
 		fpsLabel.addAction(new Action() {
 			@Override
@@ -59,15 +65,20 @@ class HUDRenderer implements Disposable {
 		Container<Label> fpsContainer = new Container<Label>(fpsLabel).bottom().left().padLeft(10f).padBottom(6f);
 		stage.addActor(fpsContainer);
 
-		// crosshair
+		// ── Crosshair ───────────────────────────────────────────────────────
 		Container<Image> crosshairContainer = new Container<>(
 				new Image(assets.get("images/crosshair-normal.png", Texture.class)));
 		crosshairContainer.setFillParent(true);
 		stage.addActor(crosshairContainer);
 		crosshairContainer.center().size(16f);
 
+		// ── Build-hint label (shown near the top centre when ghost is visible) ─
+		hintLabel = new Label("", hintLabelStyle);
+		Container<Label> hintContainer = new Container<>(hintLabel).top().center().padTop(20f);
+		hintContainer.setFillParent(true);
+		stage.addActor(hintContainer);
 
-		// hotbar
+		// ── Hotbar ──────────────────────────────────────────────────────────
 		HorizontalGroup hotbar = new HorizontalGroup();
 		hotbar.setFillParent(true);
 		stage.addActor(hotbar);
@@ -84,11 +95,11 @@ class HUDRenderer implements Disposable {
 			hotbar.addActor(slot);
 		}
 
-		// stat bars
+		// ── Stat bars ───────────────────────────────────────────────────────
 		Texture barBgTexture = Util.generateTexture(Color.BROWN, 20);
-		Texture healthFill = Util.generateTexture(new Color(0.85f, 0.15f, 0.15f, 1f), 20); // red
-		Texture hungerFill = Util.generateTexture(new Color(0.90f, 0.65f, 0.10f, 1f), 20); // orange
-		Texture thirstFill = Util.generateTexture(new Color(0.20f, 0.55f, 0.90f, 1f), 20); // blue
+		Texture healthFill   = Util.generateTexture(new Color(0.85f, 0.15f, 0.15f, 1f), 20);
+		Texture hungerFill   = Util.generateTexture(new Color(0.90f, 0.65f, 0.10f, 1f), 20);
+		Texture thirstFill   = Util.generateTexture(new Color(0.20f, 0.55f, 0.90f, 1f), 20);
 		disposables.add(barBgTexture);
 		disposables.add(healthFill);
 		disposables.add(hungerFill);
@@ -107,7 +118,7 @@ class HUDRenderer implements Disposable {
 		statTable.bottom().left().pad(16);
 		stage.addActor(statTable);
 
-		// inventory
+		// ── Inventory ───────────────────────────────────────────────────────
 		inventoryTable = new Table();
 		inventoryTable.setFillParent(true);
 		inventoryTable.top().left().pad(14f);
@@ -127,8 +138,8 @@ class HUDRenderer implements Disposable {
 	private ProgressBar makeStatBar(Texture bg, Texture fill) {
 		ProgressBar.ProgressBarStyle style = new ProgressBar.ProgressBarStyle();
 		style.background = new TextureRegionDrawable(bg);
-		style.knobBefore = new TextureRegionDrawable(fill);
-		style.knob = new TextureRegionDrawable(fill);
+		style.knobBefore  = new TextureRegionDrawable(fill);
+		style.knob        = new TextureRegionDrawable(fill);
 		ProgressBar bar = new ProgressBar(0f, 1f, 0.001f, false, style);
 		bar.setValue(1f);
 		return bar;
@@ -137,15 +148,41 @@ class HUDRenderer implements Disposable {
 	protected void render(World world, float delta) {
 		PlayerStats stats = world.getPlayer().getStats();
 		healthBar.setValue(stats.getHealth());
-    hungerBar.setValue(stats.getHunger());
-    thirstBar.setValue(stats.getThirst());
+		hungerBar.setValue(stats.getHunger());
+		thirstBar.setValue(stats.getThirst());
 
+		// ── Build hint text ─────────────────────────────────────────────────
+		Holdable held = world.getPlayer().getHotbar().getHeldItem();
+		if (held instanceof Hammer && world.getPlacementGhost().isVisible()) {
+			int wood      = world.getPlayer().getBackpack().getCount("Wood");
+			boolean canBuild = wood >= Hammer.WOOD_COST;
+			String costStr = "[LMB] Place plank  (Wood: " + wood + " / " + Hammer.WOOD_COST + ")";
+			hintLabel.setStyle(new LabelStyle(hintLabel.getStyle().font,
+					canBuild ? new Color(0.4f, 1f, 0.4f, 1f) : new Color(1f, 0.4f, 0.4f, 1f)));
+			hintLabel.setText(costStr);
+		} else if (held != null) {
+			hintLabel.setStyle(new LabelStyle(hintLabel.getStyle().font, new Color(0.9f, 0.95f, 0.5f, 1f)));
+			// Show building placement hint when hovering an occupied/empty tile
+			RaftTile hoveredTile = world.getHoveredRaftTile();
+			if (hoveredTile != null && !(held instanceof Hammer)) {
+				if (hoveredTile.hasBuilding()) {
+					hintLabel.setText("Tile occupied: " + hoveredTile.getBuilding().getName());
+				} else {
+					hintLabel.setText("[LMB] Place " + held.getName());
+				}
+			} else {
+				hintLabel.setText("");
+			}
+		} else {
+			hintLabel.setText("");
+		}
+
+		// ── Inventory list ──────────────────────────────────────────────────
 		Iterable<Map.Entry<Item, Integer>> items = world.getPlayer().getBackpack().getSortedBackpackView();
 		inventoryTable.clear();
 		for (Map.Entry<Item, Integer> i : items) {
 			Item item = i.getKey();
 			int quantity = i.getValue();
-			
 			Label label = new Label(item.name + " x" + quantity, mainLabelStyle);
 			inventoryTable.add(label).row();
 		}
@@ -163,5 +200,4 @@ class HUDRenderer implements Disposable {
 		for (Disposable disposable : disposables)
 			disposable.dispose();
 	}
-
 }

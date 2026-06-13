@@ -3,6 +3,7 @@ package com.lucaslng.raft.screen;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.Vector3;
@@ -11,6 +12,9 @@ import com.lucaslng.raft.rendering.GameRenderer;
 import com.lucaslng.raft.world.World;
 import com.lucaslng.raft.assets.Assets;
 import com.lucaslng.raft.event.EventBus;
+import com.lucaslng.raft.event.Subscriber;
+import com.lucaslng.raft.event.events.HotbarIndexEvent;
+import com.lucaslng.raft.event.events.TilePlacedEvent;
 import com.lucaslng.raft.event.events.ToggleInventoryEvent;
 import com.lucaslng.raft.input.InputManager;
 
@@ -38,9 +42,17 @@ class GameScreen implements Screen {
 		gameRenderer = new GameRenderer(assets, world, events);
 
 		Music music = assets.get("music/The Pirate's Waltz.mp3", Music.class);
-		music.setVolume(.3f);
+		music.setVolume(.2f);
 		music.play();
 		music.setLooping(true);
+
+		events.subscribe(TilePlacedEvent.class, new Subscriber<TilePlacedEvent>() {
+			Sound sfx = assets.get("sfx/tile-placed.mp3", Sound.class);
+			@Override
+			public void accept(TilePlacedEvent event) {
+				sfx.play(.9f);
+			}
+		});
 
 	}
 
@@ -71,8 +83,12 @@ class GameScreen implements Screen {
 		// world.getPlayer().setRotation(camDir,);
 		cam.update();
 
-		if (keybinds.toggleInventory.isKeyJustPressed()) {
+		if (keybinds.toggleInventory.isKeyJustPressed())
 			events.post(new ToggleInventoryEvent());
+
+		for (int i=0;i<keybinds.hotbar.length;i++) {
+			if (keybinds.hotbar[i].isKeyJustPressed())
+				events.post(new HotbarIndexEvent(i));
 		}
 
 

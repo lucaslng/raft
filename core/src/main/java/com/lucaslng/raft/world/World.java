@@ -10,24 +10,36 @@ import com.badlogic.gdx.physics.bullet.collision.ClosestNotMeRayResultCallback;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.assets.Assets;
+import com.lucaslng.raft.building.BuildingRegistry;
 import com.lucaslng.raft.entity.*;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.item.ItemRegistry;
 import com.lucaslng.raft.physics.PhysicsSystem;
-import com.lucaslng.raft.raft.Raft;
+import com.lucaslng.raft.player.holdable.Hammer;
+import com.lucaslng.raft.player.holdable.Holdable;
+import com.lucaslng.raft.raft.PlacementGhost;
+import com.lucaslng.raft.raft.RaftSystem;
+import com.lucaslng.raft.raft.RaftTile;
 
 public class World implements Disposable {
 
 	private final Vector2 windDir;
 	private final EventBus events;
-	private final Raft raft;
+	private final RaftSystem raftSystem;
+	private final PlacementGhost placementGhost;
 	private final Player player;
 	private final Shark shark;
 	private final PhysicsSystem physics;
 	private final ItemRegistry itemRegistry;
 	private final TrashSystem trashSystem;
+	private final BuildingRegistry buildingRegistry;
 
+	// Raycast state
 	private Entity hoveredEntity;
+	// The raft tile the player is currently looking at (null if none).
+	private RaftTile hoveredRaftTile;
+	// Current ghost target cell
+	private Vector2 ghostTarget;
 
 	private ClosestNotMeRayResultCallback rayResultCallback;
 
@@ -35,41 +47,50 @@ public class World implements Disposable {
 		windDir = new Vector2(1f, .8f).nor();
 
 		this.events = events;
-		raft = new Raft(assets);
+
+		physics = new PhysicsSystem(events);
+
+		Model tileModel = assets.get("models/platform.g3db", Model.class);
+		raftSystem = new RaftSystem(tileModel, physics, events);
+		placementGhost = new PlacementGhost(tileModel);
+
 		shark = new Shark(assets.get("models/shark.g3dj", Model.class), new Vector3(3f, 1f, 0f));
 		player = new Player(assets.get("models/character-male.g3dj", Model.class), new Vector3(0f, 1f, 0f), events);
-		physics = new PhysicsSystem(events);
-		physics.addBody(raft.getBody());
 		physics.addEntity(player);
 		physics.addEntity(shark);
 
 		rayResultCallback = new ClosestNotMeRayResultCallback(player.getBody());
 
 		itemRegistry = new ItemRegistry(assets);
+		buildingRegistry = new BuildingRegistry(assets, events);
 		trashSystem = new TrashSystem(events, physics, itemRegistry, assets, windDir);
 	}
 
 	public void update(float delta, Camera camera) {
-		raft.update(delta);
 		player.update(delta);
 		shark.update(delta);
 		physics.update(delta);
+		raftSystem.update(delta);
 		trashSystem.update(delta, player.getPosition());
 
 		checkRaycast(camera);
 	}
 
 	private void checkRaycast(Camera cam) {
-		// reset callback
+		// Reset per-frame state
 		rayResultCallback.setClosestHitFraction(1f);
 		rayResultCallback.setCollisionObject(null);
 		hoveredEntity = null;
+		hoveredRaftTile = null;
+		ghostTarget = null;
 
-		physics.rayCast(cam.position, cam.direction.cpy().scl(100f).add(cam.position), rayResultCallback);
+		Vector3 rayEnd = cam.direction.cpy().scl(10f).add(cam.position);
+		physics.rayCast(cam.position, rayEnd, rayResultCallback);
+
 		if (rayResultCallback.hasHit()) {
-			// System.out.println("hit");
 			btCollisionObject obj = rayResultCallback.getCollisionObject();
 			Object userData = obj.userData;
+
 			if (userData instanceof Entity) {
 				hoveredEntity = (Entity) userData;
 
@@ -78,13 +99,34 @@ public class World implements Disposable {
 					if (Gdx.input.isButtonPressed(Buttons.LEFT))
 						t.onClicked(events);
 				}
-			}
+			} else if (userData instanceof RaftTile) {
+				// ── Player is looking at a raft tile ──────────────────────────
+				RaftTile tile = (RaftTile) userData;
+				hoveredRaftTile = tile;
 
+				Holdable held = player.getHotbar().getHeldItem();
+
+				if (held instanceof Hammer) {
+					ghostTarget = raftSystem.bestExpansionNeighbour(tile, cam.direction);
+
+					if (ghostTarget != null && Gdx.input.isButtonJustPressed(Buttons.LEFT)) {
+						held.onLeftClick(this);
+					}
+				} else if (held != null && Gdx.input.isButtonJustPressed(Buttons.LEFT)) {
+					held.onLeftClick(this);
+				}
+			}
 		}
+
+		placementGhost.setTarget(ghostTarget);
 	}
 
-	public Raft getRaft() {
-		return raft;
+	public RaftSystem getRaftSystem() {
+		return raftSystem;
+	}
+
+	public PlacementGhost getPlacementGhost() {
+		return placementGhost;
 	}
 
 	public Player getPlayer() {
@@ -107,12 +149,27 @@ public class World implements Disposable {
 		return hoveredEntity;
 	}
 
+	public RaftTile getHoveredRaftTile() {
+		return hoveredRaftTile;
+	}
+
+	public Vector2 getGhostTarget() {
+		return ghostTarget;
+	}
+
+	public BuildingRegistry getBuildingRegistry() {
+		return buildingRegistry;
+	}
+
+	public EventBus getEvents() {
+		return events;
+	}
+
 	@Override
 	public void dispose() {
-		raft.dispose();
+		raftSystem.dispose();
 		player.dispose();
 		shark.dispose();
 		physics.dispose();
 	}
-
 }
