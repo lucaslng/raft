@@ -3,7 +3,7 @@ package com.lucaslng.raft.player;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.Subscriber;
 import com.lucaslng.raft.event.events.PlayerDeathEvent;
-import com.lucaslng.raft.event.events.WaterFilterTickEvent;
+import com.lucaslng.raft.event.events.StatChangeEvent;
 
 public class PlayerStats {
 
@@ -16,10 +16,12 @@ public class PlayerStats {
 		hunger = new StatValue(.9f, 1f, -.004f);
 		thirst = new StatValue(.8f, 1f, -.005f);
 
-		events.subscribe(WaterFilterTickEvent.class, new Subscriber<WaterFilterTickEvent>() {
+		events.subscribe(StatChangeEvent.class, new Subscriber<StatChangeEvent>() {
 			@Override
-			public void accept(WaterFilterTickEvent event) {
-				thirst.add(event.thirstRestored);
+			public void accept(StatChangeEvent event) {
+				health.add(event.health);
+				hunger.add(event.hunger);
+				thirst.add(event.thirst);
 			}
 		});
 	}

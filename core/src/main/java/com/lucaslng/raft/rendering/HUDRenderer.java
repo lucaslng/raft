@@ -19,7 +19,6 @@ import com.lucaslng.raft.assets.Assets;
 import com.lucaslng.raft.building.Building;
 import com.lucaslng.raft.building.BuildingRegistry;
 import com.lucaslng.raft.building.SailBuilding;
-import com.lucaslng.raft.building.WaterFilter;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.events.BuildingClickedEvent;
 import com.lucaslng.raft.event.events.SailSteerEvent;
@@ -263,9 +262,7 @@ class HUDRenderer implements Disposable {
 		closeBuildingPanel();
 		Gdx.input.setCursorCatched(false);
 
-		if (building instanceof WaterFilter) {
-			openBuildingPanel = buildWaterFilterPanel((WaterFilter) building);
-		} else if (building instanceof SailBuilding) {
+		if (building instanceof SailBuilding) {
 			openBuildingPanel = buildSailPanel((SailBuilding) building);
 		} else {
 			// Generic "info" panel for unknown building types
@@ -281,31 +278,6 @@ class HUDRenderer implements Disposable {
 			openBuildingPanel = null;
 			Gdx.input.setCursorCatched(true);
 		}
-	}
-
-	// ── Water Filter panel ────────────────────────────────────────────────────
-
-	private Window buildWaterFilterPanel(WaterFilter filter) {
-		Window win = new Window("Water Filter", skin);
-		win.setMovable(true);
-		win.defaults().pad(6f);
-
-		win.add(new Label("Drip interval: " + WaterFilter.DRIP_INTERVAL + "s", whiteStyle)).left().row();
-		win.add(new Label("Thirst / drip: +" + (int) (WaterFilter.THIRST_RESTORE * 100) + "%", whiteStyle)).left().row();
-		win.add(new Label("Status: Running", whiteStyle)).left().row();
-
-		TextButton close = new TextButton("Close", skin);
-		close.addListener(new ChangeListener() {
-			@Override
-			public void changed(ChangeEvent event, Actor actor) {
-				closeBuildingPanel();
-			}
-		});
-		win.add(close).padTop(10f).width(120f).row();
-
-		win.pack();
-		centerWindow(win);
-		return win;
 	}
 
 	// ── Sail panel ────────────────────────────────────────────────────────────
