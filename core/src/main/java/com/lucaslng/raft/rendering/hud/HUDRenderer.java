@@ -7,13 +7,10 @@ import java.util.Map;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle;
-import com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
@@ -59,7 +56,7 @@ import com.lucaslng.raft.world.World;
  */
 public class HUDRenderer implements Disposable {
 
-	private final Skin skin = new Skin();
+	private final Skin skin;
 
 	private final Stage stage;
 	private final Label fpsLabel;
@@ -68,71 +65,28 @@ public class HUDRenderer implements Disposable {
 
 	private final ProgressBar healthBar, hungerBar, thirstBar;
 
-	private final Table hotbarTable = new Table(skin);
-
-	private final Table inventoryTable = new Table(skin);
+	private final Table panelTable;
+	private final Table hotbarTable;
+	private final Table inventoryTable;
 	private boolean isInventoryOpen = false;
 
 	private final BuildingRegistry buildingRegistry;
 
-	private final Table panelTable = new Table(skin);
 
 	private final World world;
 
-	public HUDRenderer(Assets assets, EventBus events, World world) {
+	public HUDRenderer(World world) {
 		this.buildingRegistry = world.getBuildingRegistry();
 		this.world = world;
 
-		BitmapFont font = assets.get("main42.ttf", BitmapFont.class);
-		LabelStyle whiteStyle = new LabelStyle(font, Color.WHITE);
-		LabelStyle greenStyle = new LabelStyle(font, new Color(0.4f, 1f, 0.4f, 1f));
-		LabelStyle redStyle = new LabelStyle(font, new Color(1f, 0.4f, 0.4f, 1f));
-		LabelStyle yellowStyle = new LabelStyle(font, new Color(0.9f, 0.95f, 0.5f, 1f));
+		Assets assets = Assets.get();
+		EventBus events = EventBus.get();
 
-		Texture buttonUp = Util.generateTexture(
-				new Color(0.25f, 0.25f, 0.25f, 1f), 4);
+		skin = assets.getSkin();
 
-		Texture buttonDown = Util.generateTexture(
-				new Color(0.15f, 0.15f, 0.15f, 1f), 4);
-
-		Texture sliderBg = Util.generateTexture(
-				new Color(0.3f, 0.3f, 0.3f, 1f), 4);
-
-		Texture sliderKnob = Util.generateTexture(
-				Color.WHITE, 16);
-
-		Texture barFg = Util.generateTexture(new Color(0.3f, 0.3f, 0.3f, 1f), 16);
-		Texture barBg = Util.generateTexture(Color.WHITE, 16);
-		
-
-		disposables.add(buttonUp);
-		disposables.add(buttonDown);
-		disposables.add(sliderBg);
-		disposables.add(sliderKnob);
-		disposables.add(barBg);
-		disposables.add(barFg);
-
-		TextButtonStyle buttonStyle = new TextButtonStyle();
-		buttonStyle.up = new TextureRegionDrawable(buttonUp);
-		buttonStyle.down = new TextureRegionDrawable(buttonDown);
-		buttonStyle.font = font;
-
-		SliderStyle sliderStyle = new SliderStyle();
-		sliderStyle.background = new TextureRegionDrawable(sliderBg);
-		sliderStyle.knob = new TextureRegionDrawable(sliderKnob);
-
-		ProgressBarStyle barStyle = new ProgressBarStyle();
-		barStyle.background = new TextureRegionDrawable(barBg);
-		barStyle.knobBefore = new TextureRegionDrawable(barFg);
-
-		skin.add("white", whiteStyle);
-		skin.add("default", whiteStyle);
-		skin.add("green", greenStyle);
-		skin.add("red", redStyle);
-		skin.add("yellow", yellowStyle);
-		skin.add("default", buttonStyle);
-		skin.add("default-horizontal", sliderStyle);
-		skin.add("default-horizontal", barStyle);
+		panelTable = new Table(skin);
+		hotbarTable = new Table(skin);
+		inventoryTable = new Table(skin);
 
 		stage = new Stage(new ExtendViewport(
 				Gdx.graphics.getBackBufferWidth(),
@@ -159,7 +113,7 @@ public class HUDRenderer implements Disposable {
 
 		// ── Hint label ────────────────────────────────────────────────────
 		hintLabel = new Label("", skin, "yellow");
-		Container<Label> hintContainer = new Container<>(hintLabel).top().center().padTop(64f);
+		Container<Label> hintContainer = new Container<>(hintLabel).top().center().padTop(72f);
 		hintContainer.setFillParent(true);
 		stage.addActor(hintContainer);
 

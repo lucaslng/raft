@@ -11,7 +11,6 @@ import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody.btRigidBodyConstructionInfo;
 import com.lucaslng.raft.event.EventBus;
-import com.lucaslng.raft.event.events.BuildingClickedEvent;
 import com.lucaslng.raft.event.events.PanelOpenedEvent;
 import com.lucaslng.raft.event.events.SailSteerEvent;
 import com.lucaslng.raft.physics.MotionState;

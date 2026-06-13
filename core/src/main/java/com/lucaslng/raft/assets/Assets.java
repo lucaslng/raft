@@ -1,8 +1,12 @@
 package com.lucaslng.raft.assets;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -11,12 +15,30 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGeneratorLoader;
 import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader;
 import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader.FreeTypeFontLoaderParameter;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.CheckBox.CheckBoxStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Disposable;
+import com.lucaslng.raft.util.Util;
 
 public class Assets extends AssetManager {
 
+	private static Assets instance;
+
+	private final List<Disposable> disposables = new ArrayList<>();
+
+	private Skin skin;
+
 	public Assets() {
 		super();
+
+		instance = this;
 
 		// setup font loader
 		setLoader(FreeTypeFontGenerator.class, new FreeTypeFontGeneratorLoader(getFileHandleResolver()));
@@ -25,7 +47,7 @@ public class Assets extends AssetManager {
 
 		// ui skin
 		load("skin/golden-ui-skin.json", Skin.class);
-		
+
 		// floating items
 		load("models/debris-wood.g3db", Model.class);
 		load("models/debris-stone.g3db", Model.class);
@@ -35,10 +57,11 @@ public class Assets extends AssetManager {
 
 		// crosshair
 		load("images/crosshair-normal.png", Texture.class);
-		
+
 		// fonts
 		loadDefaultFont(18, "main18.ttf");
 		loadDefaultFont(42, "main42.ttf");
+		loadDefaultFont(64, "main64.ttf");
 		loadDefaultFont(36, "mainBig.ttf");
 		loadDefaultFont(100, "title.ttf");
 
@@ -73,5 +96,87 @@ public class Assets extends AssetManager {
 		param.fontParameters.size = size;
 		param.fontParameters.characters = FreeTypeFontGenerator.DEFAULT_CHARS;
 		load(name, BitmapFont.class, param);
+	}
+
+	private Skin createSkin() {
+		Skin skin = new Skin();
+		BitmapFont font = get("main42.ttf", BitmapFont.class);
+		LabelStyle whiteStyle = new LabelStyle(font, Color.WHITE);
+		LabelStyle greenStyle = new LabelStyle(font, new Color(0.4f, 1f, 0.4f, 1f));
+		LabelStyle redStyle = new LabelStyle(font, new Color(1f, 0.4f, 0.4f, 1f));
+		LabelStyle yellowStyle = new LabelStyle(font, new Color(0.9f, 0.95f, 0.5f, 1f));
+		LabelStyle titleStyle = new LabelStyle(get("main64.ttf", BitmapFont.class), Color.WHITE);
+
+		Texture buttonUp = Util.generateTexture(
+				new Color(0.25f, 0.25f, 0.25f, 1f), 4);
+
+		Texture buttonDown = Util.generateTexture(
+				new Color(0.15f, 0.15f, 0.15f, 1f), 4);
+
+		Texture sliderBg = Util.generateTexture(
+				new Color(0.3f, 0.3f, 0.3f, 1f), 4);
+
+		Texture sliderKnob = Util.generateTexture(
+				Color.WHITE, 16);
+
+		Texture barFg = Util.generateTexture(new Color(0.3f, 0.3f, 0.3f, 1f), 16);
+		Texture barBg = Util.generateTexture(Color.WHITE, 16);
+
+		disposables.add(buttonUp);
+		disposables.add(buttonDown);
+		disposables.add(sliderBg);
+		disposables.add(sliderKnob);
+		disposables.add(barBg);
+		disposables.add(barFg);
+
+		TextButtonStyle buttonStyle = new TextButtonStyle();
+		buttonStyle.up = new TextureRegionDrawable(buttonUp);
+		buttonStyle.down = new TextureRegionDrawable(buttonDown);
+		buttonStyle.font = font;
+
+		SliderStyle sliderStyle = new SliderStyle();
+		sliderStyle.background = new TextureRegionDrawable(sliderBg);
+		sliderStyle.knob = new TextureRegionDrawable(sliderKnob);
+
+		ProgressBarStyle barStyle = new ProgressBarStyle();
+		barStyle.background = new TextureRegionDrawable(barBg);
+		barStyle.knobBefore = new TextureRegionDrawable(barFg);
+
+		ScrollPaneStyle scrollPaneStyle = new ScrollPaneStyle();
+		scrollPaneStyle.background = barStyle.background;
+
+		CheckBoxStyle checkBoxStyle = new CheckBoxStyle();
+		checkBoxStyle.font = font;
+
+		skin.add("white", whiteStyle);
+		skin.add("default", whiteStyle);
+		skin.add("green", greenStyle);
+		skin.add("red", redStyle);
+		skin.add("yellow", yellowStyle);
+		skin.add("title", titleStyle);
+		skin.add("default", buttonStyle);
+		skin.add("default-horizontal", sliderStyle);
+		skin.add("default-horizontal", barStyle);
+		skin.add("default", scrollPaneStyle);
+		skin.add("default", checkBoxStyle);
+		return skin;
+	}
+
+	public Skin getSkin() {
+		if (skin == null)
+			skin = createSkin();
+		return skin;
+	}
+
+	@Override
+	public void dispose() {
+		super.dispose();
+		for (Disposable d : disposables) {
+			d.dispose();
+		}
+	}
+
+	public static Assets get() {
+		return instance;
 	}
 }

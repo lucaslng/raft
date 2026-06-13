@@ -19,12 +19,11 @@ import com.lucaslng.raft.assets.Assets;
 
 class AboutScreen implements Screen {
 
-	private Stage stage;
-	private List<Disposable> disposables;
+	private final Stage stage;
+	private final List<Disposable> disposables = new ArrayList<>();
 
-	protected AboutScreen(Assets assets, ScreenManager screenManager) {
-		disposables = new ArrayList<>();
-
+	protected AboutScreen(ScreenManager screenManager) {
+		Assets assets = Assets.get();
 		Skin skin = assets.get("skin/golden-ui-skin.json", Skin.class);
 
 		stage = new Stage(new ExtendViewport(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight()));

@@ -40,7 +40,7 @@ class MainMenuScreen implements Screen {
 		TextButton playButton = new TextButton("Play", skin);
 		playButton.addListener(new ChangeListener() {
 			public void changed(ChangeEvent event, Actor actor) {
-				screenManager.push(new GameScreen(assets, screenManager));
+				screenManager.push(new GameScreen(screenManager));
 			}
 		});
 		table.add(playButton).width(300f).row();
@@ -48,7 +48,7 @@ class MainMenuScreen implements Screen {
 		TextButton instructionsButton = new TextButton("Instructions", skin);
 		instructionsButton.addListener(new ChangeListener() {
 			public void changed(ChangeEvent event, Actor actor) {
-				screenManager.push(new InstructionsScreen(assets, screenManager));
+				screenManager.push(new InstructionsScreen(screenManager));
 			}
 		});
 		table.add(instructionsButton).width(300f).row();
@@ -56,7 +56,7 @@ class MainMenuScreen implements Screen {
 		TextButton settingsButton = new TextButton("Settings", skin);
 		settingsButton.addListener(new ChangeListener() {
 			public void changed(ChangeEvent event, Actor actor) {
-				screenManager.push(new SettingsScreen(assets, screenManager));
+				screenManager.push(new SettingsScreen(screenManager));
 			}
 		});
 		table.add(settingsButton).width(300f).row();
@@ -64,7 +64,7 @@ class MainMenuScreen implements Screen {
 		TextButton aboutButton = new TextButton("About", skin);
 		aboutButton.addListener(new ChangeListener() {
 			public void changed(ChangeEvent event, Actor actor) {
-				screenManager.push(new AboutScreen(assets, screenManager));
+				screenManager.push(new AboutScreen(screenManager));
 			}
 		});
 		table.add(aboutButton).width(300f).row();

@@ -15,8 +15,6 @@ import com.lucaslng.raft.building.BuildingRegistry;
 import com.lucaslng.raft.entity.*;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.events.HoldableItemRecievedEvent;
-import com.lucaslng.raft.event.events.ItemCollectedEvent;
-import com.lucaslng.raft.event.events.TrashCollectedEvent;
 import com.lucaslng.raft.item.ItemRegistry;
 import com.lucaslng.raft.physics.PhysicsSystem;
 import com.lucaslng.raft.player.holdable.BuildingItem;
@@ -66,8 +64,10 @@ public class World implements Disposable {
 	private float time = .4f; // 0 - 1 : midnight - midnight
 	static public float DAY_LENGTH_SECONDS = 60f;
 
-	public World(Assets assets, EventBus events) {
-		this.events = events;
+	public World() {
+		events = EventBus.get();
+		Assets assets = Assets.get();
+
 		windDir = new Vector2(1f, .8f).nor();
 
 		physics = new PhysicsSystem(events);

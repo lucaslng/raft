@@ -6,6 +6,12 @@ public class EventBus {
 
 	private final Map<Class<? extends Event>, List<Subscriber<Event>>> subscribers = new HashMap<>();
 
+	private static EventBus instance;
+
+	public EventBus() {
+		instance = this;
+	}
+
 	@SuppressWarnings("unchecked")
 	public <E extends Event> void subscribe(Class<E> eventType, Subscriber<E> subscriber) {
 		subscribers
@@ -21,5 +27,9 @@ public class EventBus {
 		for (Subscriber<Event> s : snapshot) {
 			s.accept(event);
 		}
+	}
+
+	public static EventBus get() {
+		return instance;
 	}
 }

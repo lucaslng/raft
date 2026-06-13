@@ -13,9 +13,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.physics.bullet.DebugDrawer;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.utils.Disposable;
-import com.lucaslng.raft.assets.Assets;
 import com.lucaslng.raft.entity.OceanTrash;
-import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.rendering.hud.HUDRenderer;
 import com.lucaslng.raft.world.World;
 
@@ -40,14 +38,14 @@ public class GameRenderer implements Disposable {
 
 	private boolean isDebug = true;
 
-	public GameRenderer(Assets assets, World world, EventBus events) {
+	public GameRenderer(World world) {
 		this.world = world;
 
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
 		environment.add(sun);
 		outlineEnvironment.set(new ColorAttribute(ColorAttribute.AmbientLight, Color.WHITE));
 
-		hud = new HUDRenderer(assets, events, world);
+		hud = new HUDRenderer(world);
 		ocean = new OceanRenderer(42L);
 
 		debugDraw.setDebugMode(btIDebugDraw.DebugDrawModes.DBG_DrawWireframe);

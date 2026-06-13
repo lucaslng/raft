@@ -20,11 +20,10 @@ import com.lucaslng.raft.assets.Assets;
 class InstructionsScreen implements Screen {
 
 	private Stage stage;
-	private List<Disposable> disposables;
+	private final List<Disposable> disposables = new ArrayList<>();
 
-	protected InstructionsScreen(Assets assets, ScreenManager screenManager) {
-		disposables = new ArrayList<>();
-
+	protected InstructionsScreen(ScreenManager screenManager) {
+		Assets assets = Assets.get();
 		Skin skin = assets.get("skin/golden-ui-skin.json", Skin.class);
 		
 		stage = new Stage(new ExtendViewport(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight()));

@@ -1,4 +1,4 @@
-package com.lucaslng.raft.input;
+package com.lucaslng.raft.settings;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;

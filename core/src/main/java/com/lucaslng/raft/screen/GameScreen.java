@@ -4,16 +4,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Buttons;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.Vector3;
-import com.lucaslng.raft.assets.Assets;
+import com.lucaslng.raft.assets.SoundManager;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.events.*;
 import com.lucaslng.raft.input.InputManager;
-import com.lucaslng.raft.input.Keybinds;
 import com.lucaslng.raft.rendering.GameRenderer;
+import com.lucaslng.raft.settings.Settings;
 import com.lucaslng.raft.world.World;
 
 /**
@@ -21,7 +19,7 @@ import com.lucaslng.raft.world.World;
  *
  * <h3>Responsibilities</h3>
  * <ul>
- * <li>Owns the camera and drives its movement from {@link Keybinds}.</li>
+ * <li>Owns the camera and drives its movement from {@link Settings}.</li>
  * <li>Dispatches hotbar key presses and inventory toggle events.</li>
  * <li>Forwards left-click to {@link World#handleLeftClick()}.</li>
  * <li>Forwards right-click to {@link World#handleRightClick()} so the player
@@ -36,12 +34,12 @@ class GameScreen implements Screen {
 	private final World world;
 	private final GameRenderer gameRenderer;
 	private final EventBus events;
-	private final Keybinds keybinds;
+	private final Settings keybinds;
 	private final PerspectiveCamera cam;
 
-	protected GameScreen(Assets assets, ScreenManager screenManager) {
+	protected GameScreen(ScreenManager screenManager) {
 		events = new EventBus();
-		world = new World(assets, events);
+		world = new World();
 
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0, 1f, 0f);
@@ -50,20 +48,10 @@ class GameScreen implements Screen {
 		cam.far = 1000f;
 		cam.update();
 
-		keybinds = new Keybinds();
-		gameRenderer = new GameRenderer(assets, world, events);
+		keybinds = new Settings();
+		gameRenderer = new GameRenderer(world);
 
-		Music music = assets.get("music/The Pirate's Waltz.mp3", Music.class);
-		music.setVolume(.2f);
-		music.setLooping(true);
-		music.play();
-
-		// ── Sound effect subscriptions ────────────────────────────────────
-		Sound tileSfx = assets.get("sfx/tile-placed.mp3", Sound.class);
-		events.subscribe(TilePlacedEvent.class, e -> tileSfx.play(.9f));
-
-		Sound buildSfx = assets.get("sfx/building-placed.mp3", Sound.class);
-		events.subscribe(BuildingPlacedEvent.class, e -> buildSfx.play(.9f));
+		new SoundManager();
 	}
 
 	@Override
