@@ -6,8 +6,6 @@ import com.lucaslng.raft.event.events.BuildingPlacedEvent;
 import com.lucaslng.raft.raft.RaftTile;
 import com.lucaslng.raft.world.World;
 
-import java.util.Map;
-
 /**
  * A holdable that represents a specific building to be placed on the raft.
  *

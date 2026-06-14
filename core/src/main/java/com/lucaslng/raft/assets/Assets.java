@@ -83,6 +83,11 @@ public class Assets extends AssetManager {
 		// sfx
 		load("sfx/tile-placed.mp3", Sound.class);
 		load("sfx/building-placed.mp3", Sound.class);
+		load("sfx/damaged.mp3", Sound.class);
+		load("sfx/drink.mp3", Sound.class);
+		load("sfx/eat.mp3", Sound.class);
+		load("sfx/holdable-recieved.mp3", Sound.class);
+		load("sfx/trash-collected.mp3", Sound.class);
 	}
 
 	private void loadDefaultFont(int size, String name) {

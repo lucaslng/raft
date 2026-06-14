@@ -12,11 +12,8 @@ import com.lucaslng.raft.event.events.BlueprintLearnedEvent;
 public class PlayerBlueprints {
 
 	private int learned;
-	private final CraftingRegistry craftingRegistry;
 
 	public PlayerBlueprints(EventBus events, CraftingRegistry craftingRegistry) {
-		this.craftingRegistry = craftingRegistry;
-
 		events.subscribe(BlueprintLearnedEvent.class, new Subscriber<BlueprintLearnedEvent>() {
 			@Override
 			public void accept(BlueprintLearnedEvent event) {

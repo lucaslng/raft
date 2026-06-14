@@ -1,9 +1,8 @@
 package com.lucaslng.raft.screen;
 
-import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.*;
 import com.badlogic.gdx.Input.Buttons;
 import com.badlogic.gdx.Input.Keys;
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.Vector3;
 import com.lucaslng.raft.assets.SoundManager;
@@ -57,8 +56,7 @@ class GameScreen implements Screen {
 	@Override
 	public void show() {
 		Gdx.input.setCursorCatched(true);
-		// HUD stage is first so building-panel clicks aren't eaten by the game input.
-		com.badlogic.gdx.InputMultiplexer multiplexer = new com.badlogic.gdx.InputMultiplexer();
+		InputMultiplexer multiplexer = new InputMultiplexer();
 		multiplexer.addProcessor(gameRenderer.getHudStage());
 		Gdx.input.setInputProcessor(multiplexer);
 
@@ -79,8 +77,6 @@ class GameScreen implements Screen {
 			float deltaY = -Gdx.input.getDeltaY() * scale;
 			cam.rotate(Vector3.Y, deltaX);
 			cam.rotate(cam.direction.cpy().crs(cam.up).nor(), deltaY);
-		} else if (Gdx.input.isButtonJustPressed(Buttons.LEFT)) {
-			Gdx.input.setCursorCatched(true);
 		}
 
 		// ── Camera translation ─────────────────────────────────────────────
