@@ -59,10 +59,6 @@ public class Assets extends AssetManager {
 		loadDefaultFont(42, "main42.ttf");
 		loadDefaultFont(64, "main64.ttf");
 
-		// backgrounds
-		load("images/2.png", Texture.class);
-		load("images/3.png", Texture.class);
-
 		// background music
 		load("music/The Pirate's Waltz.mp3", Music.class);
 
@@ -70,15 +66,13 @@ public class Assets extends AssetManager {
 		load("models/character-male.g3dj", Model.class);
 		load("models/shark.g3dj", Model.class);
 
-		// textures
-		load("textures/sprites.atlas", TextureAtlas.class);
-
 		// raft
 		load("models/platform.g3db", Model.class);
 		load("models/water-filter/water-filter.g3dj", Model.class);
 		load("models/sail/sail.g3dj", Model.class);
 		load("models/pot.g3db", Model.class);
 		load("models/workbench.g3db", Model.class);
+		load("models/farm/farm.g3dj", Model.class);
 
 		// sfx
 		load("sfx/tile-placed.mp3", Sound.class);

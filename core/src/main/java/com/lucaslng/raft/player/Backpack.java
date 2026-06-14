@@ -23,7 +23,7 @@ public class Backpack {
 		events.subscribe(ItemCollectedEvent.class, new Subscriber<ItemCollectedEvent>() {
 			@Override
 			public void accept(ItemCollectedEvent event) {
-				ItemStack items = event.oceanItem.getItems();
+				ItemStack items = event.items;
 				add(items.item, items.quantity);
 			}
 		});

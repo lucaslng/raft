@@ -1,14 +1,14 @@
 package com.lucaslng.raft.event.events;
 
-import com.lucaslng.raft.entity.OceanItem;
 import com.lucaslng.raft.event.Event;
+import com.lucaslng.raft.item.ItemStack;
 
 public class ItemCollectedEvent extends Event {
 
-	public final OceanItem oceanItem;
+	public final ItemStack items;
 
-	public ItemCollectedEvent(OceanItem oceanItem) {
-		this.oceanItem = oceanItem;
+	public ItemCollectedEvent(ItemStack items) {
+		this.items = items;
 	}
 	
 }

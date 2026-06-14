@@ -83,7 +83,7 @@ public class TrashSystem {
 			} else {
 				String itemName = ITEM_TYPES[MathUtils.random(ITEM_TYPES.length - 1)];
 				int    quantity = MathUtils.random(1, 5);
-				t = new OceanItem(new ItemStack(itemRegistry.get(itemName), quantity), spawnPos, windDir);
+				t = new OceanItem(new ItemStack(itemRegistry.getItem(itemName), quantity), spawnPos, windDir);
 			}
 
 			trash.add(t);

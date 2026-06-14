@@ -116,7 +116,7 @@ public class World implements Disposable {
 
 		// ── Items / buildings ────────────────────────────────────────────────
 		itemRegistry = new ItemRegistry(assets);
-		buildingRegistry = new BuildingRegistry(assets, events, this, craftingRegistry);
+		buildingRegistry = new BuildingRegistry(assets, this, craftingRegistry);
 
 		// ── Entities ────────────────────────────────────────────────────────
 		player = new Player(
@@ -141,10 +141,11 @@ public class World implements Disposable {
 		events.post(new HoldableItemRecievedEvent(new BuildingItem("Workbench")));
 
 		if (settings.debug) {
-			player.getBackpack().add(itemRegistry.get("Cauliflower"), 100);
-			player.getBackpack().add(itemRegistry.get("Wood"), 100);
-			player.getBackpack().add(itemRegistry.get("String"), 100);
-			player.getBackpack().add(itemRegistry.get("Stone"), 100);
+			player.getBackpack().add(itemRegistry.getItem("Cauliflower"), 100);
+			player.getBackpack().add(itemRegistry.getItem("Wood"), 100);
+			player.getBackpack().add(itemRegistry.getItem("String"), 100);
+			player.getBackpack().add(itemRegistry.getItem("Stone"), 100);
+			events.post(new BlueprintLearnedEvent());
 			events.post(new BlueprintLearnedEvent());
 			events.post(new BlueprintLearnedEvent());
 			events.post(new BlueprintLearnedEvent());

@@ -31,7 +31,7 @@ public class Workbench extends Building {
   private final btBoxShape shape;
   private final MotionState motionState;
 
-  protected Workbench(Model model, EventBus events) {
+  protected Workbench(Model model) {
     super(new ModelInstance(model));
 
     Vector3 dimensions = Util.getDimensions(this.model);

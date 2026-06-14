@@ -10,7 +10,10 @@ public class ItemRegistry {
 
 	private final HashMap<String, Item> registry;
 
+	private static ItemRegistry instance;
+
 	public ItemRegistry(Assets assets) {
+		instance = this;
 		registry = new HashMap<>();
 		put("Wood", "A floating wood plank.", assets.get("models/debris-wood.g3db", Model.class));
 		put("Stone", "A few rocks", assets.get("models/debris-stone.g3db", Model.class));
@@ -25,8 +28,12 @@ public class ItemRegistry {
 		registry.put(name, new Item(name, description, model));
 	}
 
-	public Item get(String itemName) {
+	public Item getItem(String itemName) {
 		return registry.get(itemName);
+	}
+
+	public static ItemRegistry get() {
+		return instance;
 	}
 	
 }

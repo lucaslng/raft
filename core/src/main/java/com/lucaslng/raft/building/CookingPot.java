@@ -31,15 +31,12 @@ public class CookingPot extends Building {
 	private final btBoxShape shape;
 	private final MotionState motionState;
 	
-	private final EventBus events;
-
 	private float timer = 0f;
 	private Item currentItem = null;
 	private CookingState state = CookingState.EMPTY;
 
-	protected CookingPot(Model model, EventBus events) {
+	protected CookingPot(Model model) {
 		super(new ModelInstance(model));
-		this.events = events;
 
 		Vector3 dimensions = Util.getDimensions(this.model);
 		shape = new btBoxShape(dimensions);
@@ -68,7 +65,7 @@ public class CookingPot extends Building {
 	public void collect() {
 		currentItem = null;
 		state = CookingState.EMPTY;
-		events.post(new StatChangeEvent(0f, REPLENISH_AMOUNT, 0f));
+		EventBus.get().post(new StatChangeEvent(0f, REPLENISH_AMOUNT, 0f));
 	}
 
 	public Item getCurrentItem() {

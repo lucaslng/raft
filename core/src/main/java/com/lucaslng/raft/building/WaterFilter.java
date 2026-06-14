@@ -23,7 +23,7 @@ public class WaterFilter extends Building {
 
   private float timer = 0f;
 
-  public WaterFilter(Model model, EventBus events) {
+  public WaterFilter(Model model) {
     super(new ModelInstance(model));
 
     Vector3 dimensions = Util.getDimensions(this.model);

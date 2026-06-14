@@ -67,10 +67,11 @@ public class SailBuilding extends Building {
 	/** Current steering angle, degrees clockwise from +Z. Default = wind angle. */
 	private float steerAngleDeg;
 
-	public SailBuilding(Model model, RaftSystem raftSystem, Vector2 windDir, EventBus events) {
+	public SailBuilding(Model model, RaftSystem raftSystem, Vector2 windDir) {
 		super(new ModelInstance(model));
 		this.raftSystem = raftSystem;
 		this.windDir = windDir;
+		EventBus events = EventBus.get();
 
 		// Default heading follows the wind
 		steerAngleDeg = toDeg(windDir);

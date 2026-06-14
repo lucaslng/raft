@@ -21,7 +21,7 @@ public class OceanItem extends OceanTrash {
 	@Override
 	public void onClick(EventBus events) {
 		super.onClick(events);
-		events.post(new ItemCollectedEvent(this));
+		events.post(new ItemCollectedEvent(items));
 	}
 	
 }
