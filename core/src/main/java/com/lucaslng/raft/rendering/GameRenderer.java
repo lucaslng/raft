@@ -31,6 +31,7 @@ public class GameRenderer implements Disposable {
 	private final DebugDrawer debugDraw = new DebugDrawer();
 	private final World world;
 	private final DirectionalLight sun = new DirectionalLight().setDirection(.54f, -.76f, -.36f);
+	private final WinWall winWall = new WinWall();
 
 	private static final Color SUN_NIGHT_COLOR = new Color(0.05f, 0.05f, 0.2f, 1f);
 	private static final Color SUN_DAY_COLOR = new Color(1f, 1f, 0.95f, 1f);
@@ -78,6 +79,7 @@ public class GameRenderer implements Disposable {
 			modelBatch.render(t.getInstance(), environment);
 
 		world.getPlacementGhost().render(modelBatch, environment);
+		winWall.render(modelBatch, environment);
 		modelBatch.end();
 
 		// ── Hovered entity outline ────────────────────────────────────────
