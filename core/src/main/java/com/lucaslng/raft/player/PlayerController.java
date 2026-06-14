@@ -28,8 +28,7 @@ public class PlayerController extends InputAdapter {
 	private static final float AIR_ANGULAR_DAMPING = 0.0f;
 	private static final float GROUND_DAMPING = 0.0f;
 
-	public static final float WALK_SPEED = 5f;
-	public static final float SPRINT_SPEED = 10f;
+	public static final float SPEED = 5f;
 
 	private final PerspectiveCamera camera;
 	private final Player player;
@@ -147,9 +146,8 @@ public class PlayerController extends InputAdapter {
 		}
 
 		// ── Land / air movement ──
-		float speed = settings.sprint.isPressed() ? SPRINT_SPEED : WALK_SPEED;
-		float desiredVx = _move.x * speed;
-		float desiredVz = _move.z * speed;
+		float desiredVx = _move.x * SPEED;
+		float desiredVz = _move.z * SPEED;
 
 		if (isNearRaft()) {
 			computeRaftVelocity(_forward); // reuse _forward for raft velocity

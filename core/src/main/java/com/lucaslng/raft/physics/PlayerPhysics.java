@@ -44,9 +44,6 @@ public class PlayerPhysics implements Disposable {
 	private final MotionState motionState;
 	private final btCapsuleShape shape;
 
-	// Scratch — avoid per-frame allocation.
-	private final Vector3 _linVel = new Vector3();
-
 	public PlayerPhysics(ModelInstance model) {
 		// Derive capsule dimensions from the model bounding box.
 		// getDimensions() returns half-extents.

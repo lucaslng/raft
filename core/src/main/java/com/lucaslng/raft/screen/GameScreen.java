@@ -15,6 +15,7 @@ import com.lucaslng.raft.event.events.ToggleInventoryEvent;
 import com.lucaslng.raft.player.PlayerController;
 import com.lucaslng.raft.rendering.GameRenderer;
 import com.lucaslng.raft.rendering.hud.GreetingPanel;
+import com.lucaslng.raft.settings.Settings;
 import com.lucaslng.raft.world.World;
 
 /**
@@ -69,12 +70,13 @@ public class GameScreen implements Screen {
 
 	public GameScreen() {
 		this.events = new EventBus();
+		Settings settings = Settings.get();
 		new SoundManager();
 		world = new World();
 
 		// ── Camera ────────────────────────────────────────────────────────
 		PerspectiveCamera camera = new PerspectiveCamera(
-				70f,
+				settings.fov,
 				Gdx.graphics.getBackBufferWidth(),
 				Gdx.graphics.getBackBufferHeight());
 		camera.near = 0.05f;
@@ -141,8 +143,10 @@ public class GameScreen implements Screen {
 		events.subscribe(PlayerDeathEvent.class, new Subscriber<PlayerDeathEvent>() {
 			@Override
 			public void accept(PlayerDeathEvent event) {
-				Gdx.app.log("GameScreen", "Player died.");
-				// TODO: transition to death/respawn screen.
+				Gdx.app.postRunnable(() -> {
+					ScreenManager.get().pop();
+					ScreenManager.get().push(new DeathScreen());
+				});
 			}
 		});
 	}

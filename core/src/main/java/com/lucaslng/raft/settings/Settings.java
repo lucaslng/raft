@@ -10,12 +10,11 @@ public class Settings {
 	public final Keybind moveForward = new Keybind(Keys.W);
 	public final Keybind moveBack = new Keybind(Keys.S);
 	public final Keybind jump = new Keybind(Keys.SPACE);
-	public final Keybind sprint = new Keybind(Keys.SHIFT_LEFT);
 	public final Keybind toggleInventory = new Keybind(Keys.TAB);
 	public final Keybind[] hotbar = new Keybind[Hotbar.HOTBAR_SIZE];
 
-	public float fov = 67f;
-	public boolean debug = true;
+	public float fov = 60f;
+	public boolean debug = false;
 	public float masterVolume = .8f;
 	public float mouseSensitivity = .2f;
 
