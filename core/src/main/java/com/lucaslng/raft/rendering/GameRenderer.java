@@ -37,8 +37,6 @@ public class GameRenderer implements Disposable {
 
 	private final List<ModelInstance> opaque = new ArrayList<>();
 
-	private boolean isDebug = true;
-
 	public GameRenderer(World world) {
 		this.world = world;
 
@@ -104,12 +102,7 @@ public class GameRenderer implements Disposable {
 	public void resize(int width, int height) {
 		hud.resize(width, height);
 	}
-
-	/**
-	 * Returns the HUD's Scene2D Stage so {@code GameScreen} can add it to an
-	 * {@link com.badlogic.gdx.InputMultiplexer}, giving the building UI panels
-	 * priority over game input.
-	 */
+	
 	public com.badlogic.gdx.scenes.scene2d.Stage getHudStage() {
 		return hud.getStage();
 	}

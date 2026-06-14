@@ -10,6 +10,7 @@ import com.lucaslng.raft.assets.SoundManager;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.events.*;
 import com.lucaslng.raft.rendering.GameRenderer;
+import com.lucaslng.raft.rendering.hud.GreetingPanel;
 import com.lucaslng.raft.settings.Settings;
 import com.lucaslng.raft.world.World;
 
@@ -60,6 +61,9 @@ class GameScreen implements Screen {
 		com.badlogic.gdx.InputMultiplexer multiplexer = new com.badlogic.gdx.InputMultiplexer();
 		multiplexer.addProcessor(gameRenderer.getHudStage());
 		Gdx.input.setInputProcessor(multiplexer);
+
+		events.post(new PanelOpenedEvent(new GreetingPanel()));
+
 	}
 
 	@Override

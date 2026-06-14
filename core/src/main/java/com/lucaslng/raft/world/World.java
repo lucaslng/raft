@@ -17,6 +17,7 @@ import com.lucaslng.raft.entity.*;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.events.BlueprintLearnedEvent;
 import com.lucaslng.raft.event.events.HoldableItemRecievedEvent;
+import com.lucaslng.raft.event.events.PanelOpenedEvent;
 import com.lucaslng.raft.item.ItemRegistry;
 import com.lucaslng.raft.physics.PhysicsSystem;
 import com.lucaslng.raft.player.holdable.BuildingItem;
@@ -25,6 +26,7 @@ import com.lucaslng.raft.player.holdable.Holdable;
 import com.lucaslng.raft.raft.PlacementGhost;
 import com.lucaslng.raft.raft.RaftSystem;
 import com.lucaslng.raft.raft.RaftTile;
+import com.lucaslng.raft.rendering.hud.GreetingPanel;
 import com.lucaslng.raft.settings.Settings;
 
 /**
