@@ -112,15 +112,19 @@ class SettingsScreen implements Screen {
 		root.add(fovLabel).left().padBottom(6f);
 		root.add(fovSlider).width(400f).padBottom(6f).row();
 
-		CheckBox debugCheck = new CheckBox("  Debug wireframe", skin);
-		debugCheck.setChecked(settings.debug);
-		debugCheck.addListener(new ChangeListener() {
+		Label debugLabel = new Label("Debugging:", skin);
+		TextButton debugButton = new TextButton("", skin);
+		debugButton.setChecked(settings.debug);
+		debugButton.setText(debugButton.isChecked() ? "ON" : "OFF");
+		debugButton.addListener(new ChangeListener() {
 			@Override
 			public void changed(ChangeEvent event, Actor actor) {
-				settings.debug = debugCheck.isChecked();
+				settings.debug = debugButton.isChecked();
+				debugButton.setText(debugButton.isChecked() ? "ON" : "OFF");
 			}
 		});
-		root.add(debugCheck).left().colspan(2).padBottom(6f).row();
+		root.add(debugLabel).left().padBottom(6f);
+		root.add(debugButton).right().width(200f).padBottom(6f).row();
 
 		// ── Keybinds ───────────────────────────────────────────────────────
 		addSectionHeader(root, skin, "Keybinds");
@@ -163,7 +167,7 @@ class SettingsScreen implements Screen {
 			@Override
 			public void changed(ChangeEvent event, Actor actor) {
 				cancelRebind();
-				resetAllDefaults(volSlider, volLabel, fovSlider, fovLabel, debugCheck);
+				resetAllDefaults(volSlider, volLabel, fovSlider, fovLabel, debugButton);
 			}
 		});
 
@@ -242,7 +246,7 @@ class SettingsScreen implements Screen {
 	/** Resets all settings to their defaults and syncs the UI controls. */
 	private void resetAllDefaults(Slider volSlider, Label volLabel,
 			Slider fovSlider, Label fovLabel,
-			CheckBox debugCheck) {
+			TextButton debugButton) {
 		// Volume
 		settings.masterVolume = 1f;
 		volSlider.setValue(1f);
@@ -255,7 +259,7 @@ class SettingsScreen implements Screen {
 
 		// Debug
 		settings.debug = true;
-		debugCheck.setChecked(true);
+		debugButton.setChecked(true);
 
 		// Keybinds
 		settings.moveForward.reset();

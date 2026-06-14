@@ -78,6 +78,7 @@ public class Assets extends AssetManager {
 		load("models/water-filter/water-filter.g3dj", Model.class);
 		load("models/sail/sail.g3dj", Model.class);
 		load("models/pot.g3db", Model.class);
+		load("models/workbench.g3db", Model.class);
 
 		// sfx
 		load("sfx/tile-placed.mp3", Sound.class);
@@ -133,6 +134,7 @@ public class Assets extends AssetManager {
 		buttonStyle.up = new TextureRegionDrawable(buttonUp);
 		buttonStyle.over = new TextureRegionDrawable(buttonOver);
 		buttonStyle.down = new TextureRegionDrawable(buttonDown);
+		buttonStyle.disabled = buttonStyle.down;
 		buttonStyle.font = font;
 
 		SliderStyle sliderStyle = new SliderStyle();

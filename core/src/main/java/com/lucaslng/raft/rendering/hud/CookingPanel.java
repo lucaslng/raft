@@ -32,7 +32,7 @@ public class CookingPanel implements Panel {
 		Backpack backpack = world.getPlayer().getBackpack();
 
 		Table child = new Table(skin);
-		table.add(child).grow();
+		table.add(child).grow().row();
 		child.setFillParent(true);
 		child.defaults().pad(4f);
 
@@ -43,6 +43,7 @@ public class CookingPanel implements Panel {
 				events.post(new PanelOpenedEvent(null));
 			}
 		});
+		table.add(close).width(180f).height(60f).padBottom(180f);
 
 		ProgressBar bar = new ProgressBar(0f, 1f, .001f, false, skin);
 		bar.addAction(new Action() {
@@ -54,8 +55,8 @@ public class CookingPanel implements Panel {
 			}
 		});
 
-		TextButton collect = new TextButton("Collect", skin);
-		collect.addListener(new ChangeListener() {
+		TextButton eat = new TextButton("Eat", skin);
+		eat.addListener(new ChangeListener() {
 			@Override
 			public void changed(ChangeEvent event, Actor actor) {
 				cookingPot.collect();
@@ -73,11 +74,14 @@ public class CookingPanel implements Panel {
 
 				if (cookingPot.getState() == CookingState.EMPTY) {
 					for (Entry<Item, Integer> e : backpack.getSortedBackpackView()) {
+						Item item = e.getKey();
+						if (!CookingPot.isCookable(item))
+							continue;
+
 						int quantity = e.getValue();
 						if (quantity <= 0)
 							continue;
 
-						Item item = e.getKey();
 						String s = String.format("%s x%d", item.name, quantity);
 						child.add(new Label(s, skin));
 						TextButton button = new TextButton("Cook", skin);
@@ -88,16 +92,15 @@ public class CookingPanel implements Panel {
 								cookingPot.cook(item);
 							}
 						});
-						child.add(button).row();
+						child.add(button).padLeft(8).width(140f).row();
 					}
 				} else if (cookingPot.getState() == CookingState.COOKING) {
 					child.add(new Label("Cooking " + cookingPot.getCurrentItem().name, skin)).row();
-					child.add(bar).width(500f).padTop(10).row();
+					child.add(bar).width(500f).padTop(10).width(300f).row();
 				} else {
 					child.add(new Label("Cooked " + cookingPot.getCurrentItem().name, skin)).row();
-					child.add(collect).row();
+					child.add(eat).width(140f).row();
 				}
-				child.add(close).row();
 				return false;
 			}
 		});

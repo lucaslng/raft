@@ -2,7 +2,6 @@ package com.lucaslng.raft.rendering.hud;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -39,19 +38,11 @@ import com.lucaslng.raft.world.World;
  * <li>Building UI panels — opened when the player right-clicks a building</li>
  * </ul>
  *
- * <h3>Building panels</h3>
+ * <h3>BuildingItem hint</h3>
  * <p>
- * When a {@link BuildingClickedEvent} is posted the HUD closes any open
- * panel and opens the one appropriate for the clicked building type.
- * Panels are implemented as Scene2D {@link Window} actors added to the stage.
- * Closing a panel releases the cursor back to the game.
- * </p>
- *
- * <h3>Sail compass</h3>
- * <p>
- * The sail panel contains a 360° compass wheel (rendered as a {@link Slider}
- * from 0–360 with a degree label). Moving the slider fires a
- * {@link SailSteerEvent} which the {@link SailBuilding} subscribes to.
+ * BuildingItems are now crafted at the Workbench and consumed on placement, so
+ * the hint no longer shows ingredient costs. It simply shows the tile state and
+ * confirms that left-click will place.
  * </p>
  */
 public class HUDRenderer implements Disposable {
@@ -70,13 +61,9 @@ public class HUDRenderer implements Disposable {
 	private final Table inventoryTable;
 	private boolean isInventoryOpen = false;
 
-	private final BuildingRegistry buildingRegistry;
-
-
 	private final World world;
 
 	public HUDRenderer(World world) {
-		this.buildingRegistry = world.getBuildingRegistry();
 		this.world = world;
 
 		Assets assets = Assets.get();
@@ -161,8 +148,7 @@ public class HUDRenderer implements Disposable {
 		// Panels
 		panelTable.setVisible(false);
 		panelTable.setFillParent(true);
-		Texture bg = Util.generateTexture(
-				new Color(0f, 0f, 0f, 0.85f));
+		Texture bg = Util.generateTexture(new Color(0f, 0f, 0f, 0.85f));
 		panelTable.setBackground(new TextureRegionDrawable(bg));
 		disposables.add(bg);
 		stage.addActor(panelTable);
@@ -189,7 +175,7 @@ public class HUDRenderer implements Disposable {
 		hungerBar.setValue(stats.getHunger());
 		thirstBar.setValue(stats.getThirst());
 
-		// hotbar
+		// ── Hotbar ─────────────────────────────────────────────────────────
 		hotbarTable.clear();
 		Hotbar hotbar = world.getPlayer().getHotbar();
 		for (int i = 0; i < Hotbar.HOTBAR_SIZE; i++) {
@@ -209,20 +195,19 @@ public class HUDRenderer implements Disposable {
 			hintLabel.setText("[LMB] Place plank  (Wood: " + wood + " / " + Hammer.WOOD_COST + ")");
 
 		} else if (held instanceof BuildingItem) {
+			// BuildingItems are crafted — no need to show ingredient costs.
 			BuildingItem item = (BuildingItem) held;
 			RaftTile tile = world.getHoveredRaftTile();
 
 			if (tile == null) {
 				hintLabel.setStyle(skin.get("yellow", LabelStyle.class));
-				hintLabel.setText(item.getName() + " - aim at an empty raft tile");
+				hintLabel.setText(item.getName() + " — aim at an empty raft tile");
 			} else if (tile.hasBuilding()) {
 				hintLabel.setStyle(skin.get("yellow", LabelStyle.class));
 				hintLabel.setText("Tile occupied: " + tile.getBuilding().getName());
 			} else {
-				Map<String, Integer> cost = buildingRegistry.getCost(item.getName());
-				boolean canAfford = canAffordAll(world, cost);
-				hintLabel.setStyle(canAfford ? skin.get("green", LabelStyle.class) : skin.get("red", LabelStyle.class));
-				hintLabel.setText(buildCostString(item.getName(), world, cost));
+				hintLabel.setStyle(skin.get("green", LabelStyle.class));
+				hintLabel.setText("[LMB] Place " + item.getName());
 			}
 
 		} else {
@@ -233,7 +218,7 @@ public class HUDRenderer implements Disposable {
 		// ── Inventory list ─────────────────────────────────────────────────
 		if (isInventoryOpen) {
 			inventoryTable.clear();
-			for (Map.Entry<Item, Integer> entry : world.getPlayer().getBackpack().getSortedBackpackView()) {
+			for (java.util.Map.Entry<Item, Integer> entry : world.getPlayer().getBackpack().getSortedBackpackView()) {
 				inventoryTable.add(
 						new Label(entry.getKey().name + " x" + entry.getValue(), skin)).row();
 			}
@@ -265,29 +250,5 @@ public class HUDRenderer implements Disposable {
 		ProgressBar bar = new ProgressBar(0f, 1f, 0.001f, false, style);
 		bar.setValue(1f);
 		return bar;
-	}
-
-	private boolean canAffordAll(World world, Map<String, Integer> cost) {
-		if (cost == null)
-			return false;
-		for (Map.Entry<String, Integer> e : cost.entrySet())
-			if (world.getPlayer().getBackpack().getCount(e.getKey()) < e.getValue())
-				return false;
-		return true;
-	}
-
-	private String buildCostString(String name, World world, Map<String, Integer> cost) {
-		StringBuilder sb = new StringBuilder("[LMB] Place ").append(name).append("  (");
-		if (cost != null) {
-			boolean first = true;
-			for (Map.Entry<String, Integer> e : cost.entrySet()) {
-				if (!first)
-					sb.append("  ");
-				first = false;
-				int have = world.getPlayer().getBackpack().getCount(e.getKey());
-				sb.append(e.getKey()).append(": ").append(have).append('/').append(e.getValue());
-			}
-		}
-		return sb.append(')').toString();
 	}
 }

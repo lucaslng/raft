@@ -15,6 +15,7 @@ import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.entity.OceanTrash;
 import com.lucaslng.raft.rendering.hud.HUDRenderer;
+import com.lucaslng.raft.settings.Settings;
 import com.lucaslng.raft.world.World;
 
 public class GameRenderer implements Disposable {
@@ -88,7 +89,7 @@ public class GameRenderer implements Disposable {
 		}
 
 		// ── Debug draw ────────────────────────────────────────────────────
-		if (isDebug) {
+		if (Settings.get().debug) {
 			debugDraw.begin(camera);
 			world.getPhysics().debugDrawWorld();
 			debugDraw.end();

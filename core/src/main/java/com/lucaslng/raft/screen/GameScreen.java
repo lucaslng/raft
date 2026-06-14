@@ -9,7 +9,6 @@ import com.badlogic.gdx.math.Vector3;
 import com.lucaslng.raft.assets.SoundManager;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.events.*;
-import com.lucaslng.raft.input.InputManager;
 import com.lucaslng.raft.rendering.GameRenderer;
 import com.lucaslng.raft.settings.Settings;
 import com.lucaslng.raft.world.World;
@@ -34,7 +33,7 @@ class GameScreen implements Screen {
 	private final World world;
 	private final GameRenderer gameRenderer;
 	private final EventBus events;
-	private final Settings keybinds;
+	private final Settings settings;
 	private final PerspectiveCamera cam;
 
 	protected GameScreen() {
@@ -48,7 +47,7 @@ class GameScreen implements Screen {
 		cam.far = 1000f;
 		cam.update();
 
-		keybinds = new Settings();
+		settings = Settings.get();
 		gameRenderer = new GameRenderer(world);
 
 		new SoundManager();
@@ -60,12 +59,15 @@ class GameScreen implements Screen {
 		// HUD stage is first so building-panel clicks aren't eaten by the game input.
 		com.badlogic.gdx.InputMultiplexer multiplexer = new com.badlogic.gdx.InputMultiplexer();
 		multiplexer.addProcessor(gameRenderer.getHudStage());
-		multiplexer.addProcessor(new InputManager());
 		Gdx.input.setInputProcessor(multiplexer);
 	}
 
 	@Override
 	public void render(float delta) {
+		if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
+			Gdx.input.setCursorCatched(false);
+		}
+
 		// ── Camera rotation ───────────────────────────────────────────────
 		if (Gdx.input.isCursorCatched()) {
 			float scale = delta * CAMERA_SENSITIVITY;
@@ -73,33 +75,35 @@ class GameScreen implements Screen {
 			float deltaY = -Gdx.input.getDeltaY() * scale;
 			cam.rotate(Vector3.Y, deltaX);
 			cam.rotate(cam.direction.cpy().crs(cam.up).nor(), deltaY);
+		} else if (Gdx.input.isButtonJustPressed(Buttons.LEFT)) {
+			Gdx.input.setCursorCatched(true);
 		}
 
 		// ── Camera translation ─────────────────────────────────────────────
 		Vector3 flatDir = new Vector3(cam.direction).nor();
 		flatDir.y = 0f;
-		if (keybinds.moveForward.isPressed())
+		if (settings.moveForward.isPressed())
 			cam.translate(flatDir.cpy().scl(CAMERA_SPEED));
-		if (keybinds.moveBack.isPressed())
+		if (settings.moveBack.isPressed())
 			cam.translate(flatDir.cpy().scl(-CAMERA_SPEED));
 		Vector3 right = flatDir.cpy().crs(cam.up).nor();
-		if (keybinds.moveRight.isPressed())
+		if (settings.moveRight.isPressed())
 			cam.translate(right.cpy().scl(CAMERA_SPEED));
-		if (keybinds.moveLeft.isPressed())
+		if (settings.moveLeft.isPressed())
 			cam.translate(right.cpy().scl(-CAMERA_SPEED));
 		if (Gdx.input.isKeyPressed(Keys.SHIFT_LEFT))
 			cam.translate(cam.up.cpy().scl(-CAMERA_SPEED));
-		if (keybinds.jump.isPressed())
+		if (settings.jump.isPressed())
 			cam.translate(cam.up.cpy().scl(CAMERA_SPEED));
 
 		cam.update();
 
 		// ── Hotbar / inventory input ───────────────────────────────────────
-		if (keybinds.toggleInventory.isKeyJustPressed())
+		if (settings.toggleInventory.isKeyJustPressed())
 			events.post(new ToggleInventoryEvent());
 
-		for (int i = 0; i < keybinds.hotbar.length; i++) {
-			if (keybinds.hotbar[i].isKeyJustPressed())
+		for (int i = 0; i < settings.hotbar.length; i++) {
+			if (settings.hotbar[i].isKeyJustPressed())
 				events.post(new HotbarIndexEvent(i));
 		}
 
