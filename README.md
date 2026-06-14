@@ -2,18 +2,28 @@
 
 Raft is a 3D first-person survival game built with libGDX in which the player is stranded on a small wooden raft in a vast, endlessly drifting ocean. The player must collect floating trash to expand their raft. The player can craft essential buildings such as water filters, cooking pots, and farms, and manage their health, hunger, and thirst to stay alive. A shark lurks beneath the raft and attacks whenever the player falls into the water, adding danger to any attempts to swim out and collect items. The ultimate goal is to craft and place a sail, steer the raft northward through the waves, and reach a distant safe haven 5,000 units north before the player's stats run out.
 
+I implemented all the features in the proposal which were not optional. But I think the game needs multiplayer and more progression to actually be fun. I wrote the project with this in mind, so making more buildings, ui panels, tools, and items is really easy, and implementing multiplayer doesn't require too many changes. However, I couldnt work on it because I was sick, otherwise I definitely would have made these changes.
+
+On top of the mandatory features, I also implemented a loading screen and a lot of sound effects.
+
+The one difference to the initial designs is the UI. I changed it a lot because I really didn't like the original UI style. It came from a skin that I found online and I couldn't find better skins. Also, I made the hotbar text-only because I couldn't find good 2D textures for buildings that would correspond to their 3D textures, and I didn't have time to render their 3D textures into 2D and then render them on the hotbar.
+
+## Cheats
+
+In the settings, there is a cheats toggle! You get free items and unlock crafting recipes at the start. Also, extending your raft becomes free.
+
 ## Quickstart
 
 Run using `./gradlew lwjgl3:run` or `gradlew.bat lwjgl3:run`
 Build jar using `./gradlew lwjgl3:jar` or `gradlew.bat lwjgl3:jar`
 
-## Known Bugs
+## Known Bugs/Issues
 
-- Swimming is a little bit finicky
+- Swimming is a little bit finicky, I don't know how to tune the physics values, especially buoyancy, to perfect it
+- Ocean waves are not translucent, they sometimes cover the raft
+- The ocean is tiled, at the edges of the tiling there is a border. But it is barely noticable and you'll only find it if you're looking for it
 
 ## Gradle
-
-Run the project using `./gradlew run` or `gradlew.bat run`
 
 The stuff below is automatically generated.
 

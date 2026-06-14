@@ -60,7 +60,12 @@ public class Backpack {
 	private void rebuildSortedView() {
 		sortedBackpack.clear();
 		sortedBackpack.addAll(backpack.entrySet());
-		Collections.sort(sortedBackpack, (a, b) -> Integer.compare(b.getValue(), a.getValue()));
+		Collections.sort(sortedBackpack, new Comparator<Entry<Item, Integer>>() {
+			@Override
+			public int compare(Entry<Item, Integer> a, Entry<Item, Integer> b) {
+				return b.getValue() - a.getValue();
+			}
+		});
 	}
 
 	public Iterable<Entry<Item, Integer>> getSortedBackpackView() {

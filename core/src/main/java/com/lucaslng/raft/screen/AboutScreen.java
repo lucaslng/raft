@@ -41,7 +41,7 @@ class AboutScreen implements Screen {
 
 		String body =
 				"Lucas Leung\n" +
-				"Friday, June 12th, 2026\n\n" +
+				"Sunday, June 15th, 2026\n\n" +
 				"Survive the harsh seas on your little raft!\n" +
 				"Collect trash, build structures, and manage your hunger and thirst. Build a sail to control your raft. Find the rumoured safe haven far up north, but be careful of the Sharks!\n\n" +
 				"Built using libGDX";
