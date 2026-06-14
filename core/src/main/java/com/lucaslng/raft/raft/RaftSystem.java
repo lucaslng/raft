@@ -69,10 +69,10 @@ public class RaftSystem implements Disposable {
 	// Reusable scratch vector — never stored across frames.
 	private final Vector2 scratch = new Vector2();
 
-	public RaftSystem(Model tileModel, PhysicsSystem physics, EventBus events) {
+	public RaftSystem(Model tileModel, PhysicsSystem physics) {
 		this.tileModel = tileModel;
 		this.physics = physics;
-		this.events = events;
+		this.events = EventBus.get();
 		addTile(new Vector2(0, 0));
 	}
 

@@ -17,7 +17,6 @@ import com.lucaslng.raft.entity.*;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.events.BlueprintLearnedEvent;
 import com.lucaslng.raft.event.events.HoldableItemRecievedEvent;
-import com.lucaslng.raft.event.events.PanelOpenedEvent;
 import com.lucaslng.raft.item.ItemRegistry;
 import com.lucaslng.raft.physics.PhysicsSystem;
 import com.lucaslng.raft.player.holdable.BuildingItem;
@@ -26,7 +25,6 @@ import com.lucaslng.raft.player.holdable.Holdable;
 import com.lucaslng.raft.raft.PlacementGhost;
 import com.lucaslng.raft.raft.RaftSystem;
 import com.lucaslng.raft.raft.RaftTile;
-import com.lucaslng.raft.rendering.hud.GreetingPanel;
 import com.lucaslng.raft.settings.Settings;
 
 /**
@@ -47,6 +45,14 @@ import com.lucaslng.raft.settings.Settings;
  * The player begins with a single {@link BuildingItem} for the Workbench.
  * All other buildings must be crafted at the Workbench once the appropriate
  * blueprints have been collected.
+ * </p>
+ *
+ * <h3>Shark AI</h3>
+ * <p>
+ * Each frame the shark is driven by its own 3-arg
+ * {@link Shark#update(float, Vector3, Vector2)} which receives the current
+ * player position and the raft's world-space XZ origin so the shark knows
+ * where to lurk.
  * </p>
  */
 public class World implements Disposable {
@@ -86,17 +92,15 @@ public class World implements Disposable {
 
 		windDir = new Vector2(1f, .8f).nor();
 
-		physics = new PhysicsSystem(events);
+		physics = new PhysicsSystem();
 		entitySystem = new EntitySystem(physics);
 
 		// ── Raft ────────────────────────────────────────────────────────────
 		Model tileModel = assets.get("models/platform.g3db", Model.class);
-		raftSystem = new RaftSystem(tileModel, physics, events);
+		raftSystem = new RaftSystem(tileModel, physics);
 		placementGhost = new PlacementGhost(tileModel);
 
 		// ── Crafting system ──────────────────────────────────────────────────
-		// CraftingRegistry must be created BEFORE BuildingRegistry so that
-		// BuildingRegistry can register recipe entries into it.
 		craftingRegistry = new CraftingRegistry();
 
 		// ── Items / buildings ────────────────────────────────────────────────
@@ -104,8 +108,6 @@ public class World implements Disposable {
 		buildingRegistry = new BuildingRegistry(assets, events, this, craftingRegistry);
 
 		// ── Entities ────────────────────────────────────────────────────────
-		// Player is created AFTER craftingRegistry so PlayerBlueprints can be
-		// wired up to forward blueprint events to the registry.
 		player = new Player(
 				assets.get("models/character-male.g3dj", Model.class),
 				new Vector3(0f, 1f, 0f), events, craftingRegistry);
@@ -114,7 +116,8 @@ public class World implements Disposable {
 		for (Material m : sharkModel.materials) {
 			m.set(IntAttribute.createCullFace(0));
 		}
-		shark = new Shark(sharkModel, new Vector3(3f, 1f, 0f));
+		// Spawn the shark underwater below the initial raft origin.
+		shark = new Shark(sharkModel, new Vector3(6f, -4f, 0f));
 
 		entitySystem.add(player);
 		entitySystem.add(shark);
@@ -124,11 +127,8 @@ public class World implements Disposable {
 		trashSystem = new TrashSystem(events, physics, itemRegistry, assets, windDir);
 
 		// ── Starting inventory ───────────────────────────────────────────────
-		// The player starts with one Workbench BuildingItem.
-		// All other buildings must be crafted using blueprint-unlocked recipes.
 		events.post(new HoldableItemRecievedEvent(new BuildingItem("Workbench")));
 
-		// Debug: give the player some resources to craft with.
 		if (settings.debug) {
 			player.getBackpack().add(itemRegistry.get("Cauliflower"), 100);
 			player.getBackpack().add(itemRegistry.get("Wood"), 100);
@@ -144,7 +144,12 @@ public class World implements Disposable {
 	public void update(float delta, Camera camera) {
 		time += delta / DAY_LENGTH_SECONDS;
 		time %= 1f;
+
 		entitySystem.update(delta);
+
+		// Drive shark AI manually — needs player position + raft origin.
+		shark.update(delta, player.getPosition(), raftSystem.getRaftPosition());
+
 		physics.update(delta);
 		raftSystem.update(delta);
 		raftSystem.drift(windDir, delta);
