@@ -26,10 +26,10 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.util.Util;
 
+// Loads game assets asynchronously. Singleton.
 public class Assets extends AssetManager {
 
 	private static Assets instance;
-
 	private final List<Disposable> disposables = new ArrayList<>();
 
 	private Skin skin;
@@ -90,6 +90,7 @@ public class Assets extends AssetManager {
 		load("sfx/trash-collected.mp3", Sound.class);
 	}
 
+	// Load the default font with a specific size
 	private void loadDefaultFont(int size, String name) {
 		FreeTypeFontLoaderParameter param = new FreeTypeFontLoaderParameter();
 		param.fontFileName = "fonts/chinese rocks rg.otf";
@@ -98,6 +99,7 @@ public class Assets extends AssetManager {
 		load(name, BitmapFont.class, param);
 	}
 
+	// Create the default skin used for uis
 	private Skin createSkin() {
 		Skin skin = new Skin();
 		BitmapFont font = get("main42.ttf", BitmapFont.class);

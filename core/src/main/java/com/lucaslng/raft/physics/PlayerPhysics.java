@@ -65,7 +65,7 @@ public class PlayerPhysics implements Disposable {
 		motionState = new MotionState(model.transform, 0f);
 		shape = new btCapsuleShape(radius, cylinderHeight);
 
-		float mass = 2f;
+		float mass = 20f;
 		Vector3 inertia = new Vector3();
 		shape.calculateLocalInertia(mass, inertia);
 

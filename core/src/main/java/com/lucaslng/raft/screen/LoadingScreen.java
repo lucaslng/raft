@@ -16,6 +16,7 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.lucaslng.raft.assets.Assets;
+import com.lucaslng.raft.assets.SoundManager;
 import com.lucaslng.raft.util.Util;
 
 public class LoadingScreen implements Screen {

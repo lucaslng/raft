@@ -6,6 +6,7 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.lucaslng.raft.assets.SoundManager;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.Subscriber;
 import com.lucaslng.raft.event.events.PanelOpenedEvent;
@@ -13,7 +14,6 @@ import com.lucaslng.raft.event.events.PlayerDeathEvent;
 import com.lucaslng.raft.event.events.ToggleInventoryEvent;
 import com.lucaslng.raft.player.PlayerController;
 import com.lucaslng.raft.rendering.GameRenderer;
-import com.lucaslng.raft.world.SwimmingSystem;
 import com.lucaslng.raft.world.World;
 
 /**
@@ -50,7 +50,6 @@ public class GameScreen implements Screen {
 	private final World world;
 	private final GameRenderer renderer;
 	private final PlayerController playerController;
-	private final SwimmingSystem swimmingSystem;
 
 	// ── Input ─────────────────────────────────────────────────────────────────
 
@@ -68,6 +67,7 @@ public class GameScreen implements Screen {
 
 	public GameScreen() {
 		EventBus events = new EventBus();
+		new SoundManager();
 		world = new World();
 
 		// ── Camera ────────────────────────────────────────────────────────
@@ -79,14 +79,10 @@ public class GameScreen implements Screen {
 		camera.far = 500f;
 		camera.update();
 
-		// ── Swimming ──────────────────────────────────────────────────────
-		swimmingSystem = new SwimmingSystem();
-
 		// ── Player controller ─────────────────────────────────────────────
 		playerController = new PlayerController(
 				camera,
 				world.getPlayer(),
-				swimmingSystem,
 				world.getRaftSystem());
 
 		// ── Renderer ──────────────────────────────────────────────────────
@@ -169,23 +165,9 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void render(float delta) {
-		// Cap delta so physics don't explode after a hitch.
-		float dt = Math.min(delta, 1f / 30f);
-
-		// 1. Mouse-look + WASD velocity (sets body velocity + camera direction).
-		playerController.update(dt);
-
-		// 2. Swimming (uses camera.direction for swim steering).
-		swimmingSystem.update(
-				world.getPlayer().getBody(),
-				world.getPlayer().getPosition().y,
-				playerController.getCamera().direction);
-
-		// 3. Physics, AI, raft drift, trash, raycast.
-		world.update(dt, playerController.getCamera());
-
-		// 4. Render.
-		renderer.render(dt, playerController.getCamera());
+		playerController.update(delta);
+		world.update(delta, playerController.getCamera());
+		renderer.render(delta, playerController.getCamera());
 	}
 
 	@Override

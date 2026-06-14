@@ -6,7 +6,9 @@ import com.lucaslng.raft.event.Event;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.Subscriber;
 import com.lucaslng.raft.event.events.*;
+import com.lucaslng.raft.settings.Settings;
 
+// Hooks into events to play sound, all sound related stuff is here, the rest of the game doesn't know that sound exists
 public class SoundManager {
 
 	private final Assets assets;
@@ -17,14 +19,14 @@ public class SoundManager {
 		events = EventBus.get();
 
 		Music music = assets.get("music/The Pirate's Waltz.mp3");
-		music.setVolume(.2f * master());
+		music.setVolume(.1f * master());
 		music.setLooping(true);
 		music.play();
 
-		sfx(TilePlacedEvent.class, "tile-placed.mp3", .9f);
-		sfx(BuildingPlacedEvent.class, "building-placed.mp3", .9f);
-		sfx(HoldableItemRecievedEvent.class, "holdable-recieved.mp3", 1f);
-		sfx(TrashCollectedEvent.class, "trash-collected.mp3", .9f);
+		sfx(TilePlacedEvent.class, "tile-placed.mp3", .2f);
+		sfx(BuildingPlacedEvent.class, "building-placed.mp3", .8f);
+		sfx(HoldableItemRecievedEvent.class, "holdable-recieved.mp3", .8f);
+		sfx(TrashCollectedEvent.class, "trash-collected.mp3", .7f);
 		events.subscribe(StatChangeEvent.class, new Subscriber<StatChangeEvent>() {
 			Sound damaged = getSfx("damaged.mp3");
 			Sound eat = getSfx("eat.mp3");
@@ -32,11 +34,11 @@ public class SoundManager {
 			@Override
 			public void accept(StatChangeEvent event) {
 				if (event.health < 0f)
-					damaged.play(1f * master());
+					damaged.play(.7f * master());
 				if (event.hunger > 0f)
-					eat.play(1f * master());
+					eat.play(.9f * master());
 				if (event.thirst > 0f)
-					drink.play(1f * master());
+					drink.play(.9f * master());
 			}
 		});
 	}
@@ -52,7 +54,7 @@ public class SoundManager {
 
 
 	private float master() {
-		return 1f;
+		return Settings.get().masterVolume;
 	}
 	
 }

@@ -16,7 +16,6 @@ import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.physics.MotionState;
 import com.lucaslng.raft.util.Util;
-import com.lucaslng.raft.world.SwimmingSystem;
 
 /**
  * The shark lurks underwater below the raft, slowly circling.
@@ -51,25 +50,13 @@ import com.lucaslng.raft.world.SwimmingSystem;
  */
 public class Shark extends Entity {
 
-	// ── Behaviour constants ──────────────────────────────────────────────────
 
-	/** Y position while lurking (below water surface). */
 	private static final float LURK_DEPTH = -4f;
-
-	/** Radius of the lazy circle the shark traces while lurking. */
 	private static final float LURK_RADIUS = 6f;
-
-	/** Angular speed in radians per second while lurking. */
 	private static final float LURK_SPEED = 0.4f;
-
-	/** World-units per second while chasing. */
 	private static final float CHASE_SPEED = 6f;
-
-	/** Player Y below which the shark switches to CHASING. */
-	private static final float CHASE_Y_TRIGGER = SwimmingSystem.WATER_SURFACE_Y - 0.3f;
-
-	/** Player Y above which the shark returns to LURKING. */
-	private static final float RETURN_Y_TRIGGER = SwimmingSystem.WATER_SURFACE_Y + 0.5f;
+	private static final float CHASE_Y_TRIGGER = -0.3f;
+	private static final float RETURN_Y_TRIGGER = 0.5f;
 
 	// ── Contact-callback identifier ──────────────────────────────────────────
 
@@ -168,6 +155,7 @@ public class Shark extends Entity {
 		// which resets instance.transform to the node hierarchy root.
 		animationController.update(delta);
 
+		if (true) return;
 		// 2. Update lurk centre to track the drifting raft.
 		lurkCenter.set(raftOrigin.x, LURK_DEPTH, raftOrigin.y);
 
