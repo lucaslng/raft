@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.ClosestNotMeRayResultCallback;
 import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.assets.Assets;
+import com.lucaslng.raft.building.Building;
 import com.lucaslng.raft.building.BuildingRegistry;
 import com.lucaslng.raft.crafting.CraftingRegistry;
 import com.lucaslng.raft.entity.*;
@@ -28,6 +29,15 @@ import com.lucaslng.raft.settings.Settings;
 
 /**
  * The game-simulation root: owns all subsystems and ticks them each frame.
+ *
+ * <h3>Swimming</h3>
+ * <p>
+ * {@link SwimmingSystem} is now owned and driven by
+ * {@link com.lucaslng.raft.screen.GameScreen} — it needs the camera direction
+ * for swim steering, which is only available after
+ * {@link com.lucaslng.raft.player.PlayerController#update(float)} runs.
+ * World no longer creates or ticks it.
+ * </p>
  *
  * <h3>Crafting system</h3>
  * <p>
@@ -140,6 +150,18 @@ public class World implements Disposable {
 
 	// ── Per-frame update ─────────────────────────────────────────────────────
 
+	/**
+	 * Advances the simulation one frame.
+	 *
+	 * <p>
+	 * Note: {@link SwimmingSystem} is NOT ticked here — it is driven by
+	 * {@link com.lucaslng.raft.screen.GameScreen} before this method is called,
+	 * so that swim steering uses the already-updated camera direction.
+	 * </p>
+	 *
+	 * @param delta  frame delta (seconds, already capped by GameScreen)
+	 * @param camera the first-person camera (used for raycast direction)
+	 */
 	public void update(float delta, Camera camera) {
 		time += delta / DAY_LENGTH_SECONDS;
 		time %= 1f;

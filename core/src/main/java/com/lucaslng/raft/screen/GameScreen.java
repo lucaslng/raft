@@ -1,133 +1,201 @@
 package com.lucaslng.raft.screen;
 
-import com.badlogic.gdx.*;
-import com.badlogic.gdx.Input.Buttons;
-import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.InputMultiplexer;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.math.Vector3;
-import com.lucaslng.raft.assets.SoundManager;
 import com.lucaslng.raft.event.EventBus;
-import com.lucaslng.raft.event.events.*;
+import com.lucaslng.raft.event.Subscriber;
+import com.lucaslng.raft.event.events.PanelOpenedEvent;
+import com.lucaslng.raft.event.events.PlayerDeathEvent;
+import com.lucaslng.raft.event.events.ToggleInventoryEvent;
+import com.lucaslng.raft.player.PlayerController;
 import com.lucaslng.raft.rendering.GameRenderer;
-import com.lucaslng.raft.rendering.hud.GreetingPanel;
-import com.lucaslng.raft.settings.Settings;
+import com.lucaslng.raft.world.SwimmingSystem;
 import com.lucaslng.raft.world.World;
 
 /**
- * The main gameplay screen.
+ * The main game screen.
  *
- * <h3>Responsibilities</h3>
- * <ul>
- * <li>Owns the camera and drives its movement from {@link Settings}.</li>
- * <li>Dispatches hotbar key presses and inventory toggle events.</li>
- * <li>Forwards left-click to {@link World#handleLeftClick()}.</li>
- * <li>Forwards right-click to {@link World#handleRightClick()} so the player
- * can open building UI panels.</li>
- * </ul>
+ * <h3>Execution order (each frame)</h3>
+ * <ol>
+ * <li>{@link PlayerController#update(float)} — mouse-look + WASD velocity</li>
+ * <li>{@link SwimmingSystem#update} — buoyancy + water drag (needs updated cam
+ * direction)</li>
+ * <li>{@link World#update(float, com.badlogic.gdx.graphics.Camera)} — physics +
+ * AI + raft + raycast</li>
+ * <li>{@link GameRenderer#render(float, com.badlogic.gdx.graphics.Camera)} —
+ * draw</li>
+ * </ol>
+ *
+ * <h3>Input pipeline</h3>
+ * 
+ * <pre>
+ *   InputMultiplexer
+ *     1. HUD Stage          — Scene2D UI eats events when panels/inventory open
+ *     2. PlayerController   — hotbar number keys, inventory toggle (keyDown)
+ *     3. ClickInputAdapter  — left/right click for world interaction
+ * </pre>
+ *
+ * <h3>Cursor policy</h3>
+ * The cursor is caught (hidden) for first-person mouse-look. It is released
+ * whenever a UI panel or the inventory opens, and re-caught when they close.
  */
-class GameScreen implements Screen {
+public class GameScreen implements Screen {
 
-	private static final float CAMERA_SENSITIVITY = 4f;
-	private static final float CAMERA_SPEED = 0.1f;
+	// ── Core systems ──────────────────────────────────────────────────────────
 
 	private final World world;
-	private final GameRenderer gameRenderer;
-	private final EventBus events;
-	private final Settings settings;
-	private final PerspectiveCamera cam;
+	private final GameRenderer renderer;
+	private final PlayerController playerController;
+	private final SwimmingSystem swimmingSystem;
 
-	protected GameScreen() {
-		events = new EventBus();
+	// ── Input ─────────────────────────────────────────────────────────────────
+
+	private final InputMultiplexer inputMultiplexer;
+
+	// ── State ─────────────────────────────────────────────────────────────────
+
+	/** True while any panel (workbench, cooking, sail …) is open. */
+	private boolean panelOpen = false;
+
+	/** True while the backpack / inventory overlay is visible. */
+	private boolean inventoryOpen = false;
+
+	// ── Constructor ───────────────────────────────────────────────────────────
+
+	public GameScreen() {
+		EventBus events = new EventBus();
 		world = new World();
 
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(0, 1f, 0f);
-		cam.lookAt(0, 0, 1);
-		cam.near = .1f;
-		cam.far = 1000f;
-		cam.update();
+		// ── Camera ────────────────────────────────────────────────────────
+		PerspectiveCamera camera = new PerspectiveCamera(
+				70f,
+				Gdx.graphics.getBackBufferWidth(),
+				Gdx.graphics.getBackBufferHeight());
+		camera.near = 0.05f;
+		camera.far = 500f;
+		camera.update();
 
-		settings = Settings.get();
-		gameRenderer = new GameRenderer(world);
+		// ── Swimming ──────────────────────────────────────────────────────
+		swimmingSystem = new SwimmingSystem();
 
-		new SoundManager();
+		// ── Player controller ─────────────────────────────────────────────
+		playerController = new PlayerController(
+				camera,
+				world.getPlayer(),
+				swimmingSystem,
+				world.getRaftSystem());
+
+		// ── Renderer ──────────────────────────────────────────────────────
+		renderer = new GameRenderer(world);
+
+		// ── Input multiplexer ─────────────────────────────────────────────
+		inputMultiplexer = new InputMultiplexer();
+		// 1. Stage — Scene2D UI must be first.
+		inputMultiplexer.addProcessor(renderer.getHudStage());
+		// 2. PlayerController — handles hotbar keys and inventory toggle.
+		inputMultiplexer.addProcessor(playerController);
+		// 3. Click handler.
+		inputMultiplexer.addProcessor(new InputAdapter() {
+			@Override
+			public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+				if (panelOpen || inventoryOpen)
+					return false;
+				if (button == Input.Buttons.LEFT) {
+					world.handleLeftClick();
+					return true;
+				}
+				if (button == Input.Buttons.RIGHT) {
+					world.handleRightClick();
+					return true;
+				}
+				return false;
+			}
+		});
+
+		Gdx.input.setInputProcessor(inputMultiplexer);
+		Gdx.input.setCursorCatched(true);
+
+		// ── Event subscriptions ───────────────────────────────────────────
+
+		// Panel opened/closed (workbench, cooking, sail …)
+		events.subscribe(PanelOpenedEvent.class, new Subscriber<PanelOpenedEvent>() {
+			@Override
+			public void accept(PanelOpenedEvent event) {
+				panelOpen = (event.panel != null);
+				refreshCursor();
+			}
+		});
+
+		// Inventory toggle (E key) — HUDRenderer flips its own boolean;
+		// we mirror it here for cursor/mouselook control.
+		events.subscribe(ToggleInventoryEvent.class, new Subscriber<ToggleInventoryEvent>() {
+			@Override
+			public void accept(ToggleInventoryEvent event) {
+				inventoryOpen = !inventoryOpen;
+				refreshCursor();
+			}
+		});
+
+		events.subscribe(PlayerDeathEvent.class, new Subscriber<PlayerDeathEvent>() {
+			@Override
+			public void accept(PlayerDeathEvent event) {
+				Gdx.app.log("GameScreen", "Player died.");
+				// TODO: transition to death/respawn screen.
+			}
+		});
 	}
+
+	/**
+	 * Syncs cursor-caught state and mouse-look enable with panel/inventory flags.
+	 * Mouse-look is active only when the cursor is caught.
+	 */
+	private void refreshCursor() {
+		boolean uiOpen = panelOpen || inventoryOpen;
+		Gdx.input.setCursorCatched(!uiOpen);
+		playerController.setMouseLookActive(!uiOpen);
+	}
+
+	// ── Screen lifecycle ──────────────────────────────────────────────────────
 
 	@Override
 	public void show() {
-		Gdx.input.setCursorCatched(true);
-		InputMultiplexer multiplexer = new InputMultiplexer();
-		multiplexer.addProcessor(gameRenderer.getHudStage());
-		Gdx.input.setInputProcessor(multiplexer);
-
-		events.post(new PanelOpenedEvent(new GreetingPanel()));
-
+		Gdx.input.setInputProcessor(inputMultiplexer);
+		refreshCursor();
 	}
 
 	@Override
 	public void render(float delta) {
-		if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
-			Gdx.input.setCursorCatched(false);
-		}
+		// Cap delta so physics don't explode after a hitch.
+		float dt = Math.min(delta, 1f / 30f);
 
-		// ── Camera rotation ───────────────────────────────────────────────
-		if (Gdx.input.isCursorCatched()) {
-			float scale = delta * CAMERA_SENSITIVITY;
-			float deltaX = -Gdx.input.getDeltaX() * scale;
-			float deltaY = -Gdx.input.getDeltaY() * scale;
-			cam.rotate(Vector3.Y, deltaX);
-			cam.rotate(cam.direction.cpy().crs(cam.up).nor(), deltaY);
-		}
+		// 1. Mouse-look + WASD velocity (sets body velocity + camera direction).
+		playerController.update(dt);
 
-		// ── Camera translation ─────────────────────────────────────────────
-		Vector3 flatDir = new Vector3(cam.direction).nor();
-		flatDir.y = 0f;
-		if (settings.moveForward.isPressed())
-			cam.translate(flatDir.cpy().scl(CAMERA_SPEED));
-		if (settings.moveBack.isPressed())
-			cam.translate(flatDir.cpy().scl(-CAMERA_SPEED));
-		Vector3 right = flatDir.cpy().crs(cam.up).nor();
-		if (settings.moveRight.isPressed())
-			cam.translate(right.cpy().scl(CAMERA_SPEED));
-		if (settings.moveLeft.isPressed())
-			cam.translate(right.cpy().scl(-CAMERA_SPEED));
-		if (Gdx.input.isKeyPressed(Keys.SHIFT_LEFT))
-			cam.translate(cam.up.cpy().scl(-CAMERA_SPEED));
-		if (settings.jump.isPressed())
-			cam.translate(cam.up.cpy().scl(CAMERA_SPEED));
+		// 2. Swimming (uses camera.direction for swim steering).
+		swimmingSystem.update(
+				world.getPlayer().getBody(),
+				world.getPlayer().getPosition().y,
+				playerController.getCamera().direction);
 
-		cam.update();
+		// 3. Physics, AI, raft drift, trash, raycast.
+		world.update(dt, playerController.getCamera());
 
-		// ── Hotbar / inventory input ───────────────────────────────────────
-		if (settings.toggleInventory.isKeyJustPressed())
-			events.post(new ToggleInventoryEvent());
-
-		for (int i = 0; i < settings.hotbar.length; i++) {
-			if (settings.hotbar[i].isKeyJustPressed())
-				events.post(new HotbarIndexEvent(i));
-		}
-
-		// ── World update ──────────────────────────────────────────────────
-		// Must run before click dispatch so hoveredEntity/hoveredRaftTile are current.
-		world.update(delta, cam);
-
-		// ── Click dispatch ────────────────────────────────────────────────
-		if (Gdx.input.isButtonJustPressed(Buttons.LEFT))
-			world.handleLeftClick();
-
-		if (Gdx.input.isButtonJustPressed(Buttons.RIGHT))
-			world.handleRightClick();
-
-		// ── Render ────────────────────────────────────────────────────────
-		gameRenderer.render(delta, cam);
+		// 4. Render.
+		renderer.render(dt, playerController.getCamera());
 	}
 
 	@Override
 	public void resize(int width, int height) {
+		renderer.resize(width, height);
+
+		PerspectiveCamera cam = playerController.getCamera();
 		cam.viewportWidth = width;
 		cam.viewportHeight = height;
 		cam.update();
-		gameRenderer.resize(width, height);
 	}
 
 	@Override
@@ -140,11 +208,12 @@ class GameScreen implements Screen {
 
 	@Override
 	public void hide() {
+		Gdx.input.setCursorCatched(false);
 	}
 
 	@Override
 	public void dispose() {
 		world.dispose();
-		gameRenderer.dispose();
+		renderer.dispose();
 	}
 }
