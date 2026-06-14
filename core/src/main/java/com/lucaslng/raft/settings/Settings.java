@@ -14,8 +14,8 @@ public class Settings {
 	public final Keybind[] hotbar = new Keybind[Hotbar.HOTBAR_SIZE];
 
 	public float fov = 60f;
-	public boolean debug = true;
-	public boolean cheats = true;
+	public boolean debug = false;
+	public boolean cheats = false;
 	public float masterVolume = .8f;
 	public float mouseSensitivity = .2f;
 
