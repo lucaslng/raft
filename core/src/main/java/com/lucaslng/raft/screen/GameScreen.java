@@ -9,9 +9,7 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.lucaslng.raft.assets.SoundManager;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.Subscriber;
-import com.lucaslng.raft.event.events.PanelOpenedEvent;
-import com.lucaslng.raft.event.events.PlayerDeathEvent;
-import com.lucaslng.raft.event.events.ToggleInventoryEvent;
+import com.lucaslng.raft.event.events.*;
 import com.lucaslng.raft.player.PlayerController;
 import com.lucaslng.raft.rendering.GameRenderer;
 import com.lucaslng.raft.rendering.hud.GreetingPanel;
@@ -146,6 +144,16 @@ public class GameScreen implements Screen {
 				Gdx.app.postRunnable(() -> {
 					ScreenManager.get().pop();
 					ScreenManager.get().push(new DeathScreen());
+				});
+			}
+		});
+
+		events.subscribe(WinEvent.class, new Subscriber<WinEvent>() {
+			@Override
+			public void accept(WinEvent event) {
+				Gdx.app.postRunnable(() -> {
+					ScreenManager.get().pop();
+					ScreenManager.get().push(new WinScreen());
 				});
 			}
 		});

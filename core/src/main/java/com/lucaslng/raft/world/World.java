@@ -16,6 +16,7 @@ import com.lucaslng.raft.entity.*;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.events.BlueprintLearnedEvent;
 import com.lucaslng.raft.event.events.HoldableItemRecievedEvent;
+import com.lucaslng.raft.event.events.WinEvent;
 import com.lucaslng.raft.item.ItemRegistry;
 import com.lucaslng.raft.physics.PhysicsSystem;
 import com.lucaslng.raft.player.holdable.BuildingItem;
@@ -67,6 +68,8 @@ public class World implements Disposable {
 
 	// ── Wind / environment ───────────────────────────────────────────────────
 	private final Vector2 windDir;
+
+	public static final float WIN_DIST = 5000f;
 
 	// ── Core systems ─────────────────────────────────────────────────────────
 	private final EventBus events;
@@ -144,6 +147,7 @@ public class World implements Disposable {
 			player.getBackpack().add(itemRegistry.get("Stone"), 100);
 			events.post(new BlueprintLearnedEvent());
 			events.post(new BlueprintLearnedEvent());
+			events.post(new BlueprintLearnedEvent());
 		}
 	}
 
@@ -175,6 +179,10 @@ public class World implements Disposable {
 		raftSystem.drift(windDir, delta);
 		trashSystem.update(delta, player.getPosition());
 		checkRaycast(camera);
+
+		if (player.getPosition().z >= WIN_DIST) {
+			events.post(new WinEvent());
+		}
 	}
 
 	// ── Raycast ─────────────────────────────────────────────────────────────

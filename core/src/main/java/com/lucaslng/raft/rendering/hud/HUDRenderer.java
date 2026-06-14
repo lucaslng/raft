@@ -91,6 +91,20 @@ public class HUDRenderer implements Disposable {
 		fpsContainer.top().right().pad(10);
 		stage.addActor(fpsContainer);
 
+		// North label
+		Label northLabel = new Label("", skin);
+		northLabel.addAction(new Action() {
+			@Override
+			public boolean act(float delta) {
+				((Label) actor).setText(Math.round(world.getPlayer().getPosition().z) + "m north");
+				return false;
+			}
+		});
+		Container<Label> northContainer = new Container<>(northLabel);
+		northContainer.setFillParent(true);
+		northContainer.center().top().pad(10);
+		stage.addActor(northContainer);
+
 		// ── Crosshair ──────────────────────────────────────────────────────
 		Container<Image> crosshair = new Container<>(
 				new Image(assets.get("images/crosshair-normal.png", Texture.class)));
