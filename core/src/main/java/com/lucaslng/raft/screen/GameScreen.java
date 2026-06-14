@@ -14,6 +14,7 @@ import com.lucaslng.raft.event.events.PlayerDeathEvent;
 import com.lucaslng.raft.event.events.ToggleInventoryEvent;
 import com.lucaslng.raft.player.PlayerController;
 import com.lucaslng.raft.rendering.GameRenderer;
+import com.lucaslng.raft.rendering.hud.GreetingPanel;
 import com.lucaslng.raft.world.World;
 
 /**
@@ -48,6 +49,7 @@ public class GameScreen implements Screen {
 	// ── Core systems ──────────────────────────────────────────────────────────
 
 	private final World world;
+	private final EventBus events;
 	private final GameRenderer renderer;
 	private final PlayerController playerController;
 
@@ -66,7 +68,7 @@ public class GameScreen implements Screen {
 	// ── Constructor ───────────────────────────────────────────────────────────
 
 	public GameScreen() {
-		EventBus events = new EventBus();
+		this.events = new EventBus();
 		new SoundManager();
 		world = new World();
 
@@ -159,6 +161,7 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void show() {
+		events.post(new PanelOpenedEvent(new GreetingPanel()));
 		Gdx.input.setInputProcessor(inputMultiplexer);
 		refreshCursor();
 	}

@@ -130,14 +130,7 @@ class SettingsScreen implements Screen {
 		addSectionHeader(root, skin, "Keybinds");
 
 		// Named pairs: (display name, keybind)
-		String[][] keybindNames = {
-				{ "Move Forward", null },
-				{ "Move Back", null },
-				{ "Move Left", null },
-				{ "Move Right", null },
-				{ "Jump", null },
-				{ "Toggle Inventory", null },
-		};
+		String[] keybindNames = { "Move Forward", "Move Back", "Move Left", "Move Right", "Jump", "Toggle Inventory" };
 		Keybind[] keybinds = {
 				settings.moveForward,
 				settings.moveBack,
@@ -148,7 +141,7 @@ class SettingsScreen implements Screen {
 		};
 
 		for (int i = 0; i < keybinds.length; i++) {
-			addKeybindRow(root, skin, keybindNames[i][0], keybinds[i]);
+			addKeybindRow(root, skin, keybindNames[i], keybinds[i]);
 		}
 
 		// Hotbar keys
@@ -271,8 +264,7 @@ class SettingsScreen implements Screen {
 		for (Keybind kb : settings.hotbar)
 			kb.reset();
 
-		// Rebuild the screen to reflect all reset button labels
-		ScreenManager.get().replace(new SettingsScreen());
+		Gdx.app.postRunnable(() -> ScreenManager.get().replace(new SettingsScreen()));
 	}
 
 	private static String pct(float v) {

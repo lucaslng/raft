@@ -155,7 +155,6 @@ public class Shark extends Entity {
 		// which resets instance.transform to the node hierarchy root.
 		animationController.update(delta);
 
-		if (true) return;
 		// 2. Update lurk centre to track the drifting raft.
 		lurkCenter.set(raftOrigin.x, LURK_DEPTH, raftOrigin.y);
 

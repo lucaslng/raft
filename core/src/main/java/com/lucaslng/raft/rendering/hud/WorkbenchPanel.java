@@ -120,24 +120,12 @@ public class WorkbenchPanel implements Panel {
 			craftBtn.addListener(new ChangeListener() {
 				@Override
 				public void changed(ChangeEvent event, Actor actor) {
-
-					for (Map.Entry<String, Integer> e : r.ingredients.entrySet()) {
-						if (backpack.getCount(e.getKey()) < e.getValue()) {
-							return;
-						}
-					}
-
-					for (Map.Entry<String, Integer> e : r.ingredients.entrySet()) {
-						backpack.consume(e.getKey(), e.getValue());
-					}
-
-					Holdable result = r.craft();
+					Holdable result = craftingRegistry.craft(r.name, backpack);
 					if (result != null) {
 						events.post(new HoldableItemRecievedEvent(result));
+						list.clearChildren();
+						buildRecipeList(list, skin, craftingRegistry, backpack, hotbar);
 					}
-
-					list.clearChildren();
-					buildRecipeList(list, skin, craftingRegistry, backpack, hotbar);
 				}
 			});
 

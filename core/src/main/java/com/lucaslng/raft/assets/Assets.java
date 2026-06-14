@@ -182,6 +182,7 @@ public class Assets extends AssetManager {
 	@Override
 	public void dispose() {
 		super.dispose();
+		if (skin != null) skin.dispose();
 		for (Disposable d : disposables) {
 			d.dispose();
 		}

@@ -123,6 +123,9 @@ public class CookingPot extends Building {
 
 	@Override
 	public void dispose() {
+		body.dispose();
+		motionState.dispose();
+		shape.dispose();
 	}
 
 }

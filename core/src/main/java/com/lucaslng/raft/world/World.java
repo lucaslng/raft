@@ -314,5 +314,6 @@ public class World implements Disposable {
 		entitySystem.dispose();
 		raftSystem.dispose();
 		physics.dispose();
+		rayCallback.dispose();
 	}
 }
