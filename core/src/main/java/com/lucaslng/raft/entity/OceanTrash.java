@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.bullet.collision.Collision;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.badlogic.gdx.physics.bullet.collision.btConvexHullShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
@@ -47,11 +48,12 @@ public class OceanTrash extends Entity implements Outlineable {
 
 		shape = Util.buildConvexHullShape(this.model);
 		motionState = new MotionState(transform, shape.getImplicitShapeDimensions().y);
-		btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(1f, motionState, shape);
+		btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(0f, motionState, shape);
 		body = new btRigidBody(info);
 		info.dispose();
 		body.setCollisionFlags(body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT
 				| btCollisionObject.CollisionFlags.CF_NO_CONTACT_RESPONSE);
+		body.setActivationState(Collision.DISABLE_DEACTIVATION);
 		body.userData = this;
 	}
 

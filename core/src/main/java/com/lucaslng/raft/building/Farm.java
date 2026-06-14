@@ -33,7 +33,7 @@ public class Farm extends Building {
     Vector3 dimensions = Util.getDimensions(this.model);
     shape = new btBoxShape(dimensions);
     motionState = new MotionState(this.model.transform, dimensions.y);
-    btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(1f, motionState, shape);
+    btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(0f, motionState, shape);
     body = new btRigidBody(info);
     info.dispose();
     body.setCollisionFlags(body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT);
@@ -74,7 +74,10 @@ public class Farm extends Building {
 
   @Override
   public String getInteractHint() {
-    return String.format("[RMB] Claim %dx Cauliflowers", getYield());
+    int yield = getYield();
+    if (yield == 0)
+      return "No Cauliflowers yet";
+    return String.format("[RMB] Claim %dx Cauliflowers", yield);
   }
 
   private int getYield() {

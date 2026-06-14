@@ -29,7 +29,7 @@ public class Workbench extends Building {
     Vector3 dimensions = Util.getDimensions(this.model);
     shape = new btBoxShape(dimensions);
     motionState = new MotionState(this.model.transform, dimensions.y);
-    btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(1f, motionState, shape);
+    btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(0f, motionState, shape);
     body = new btRigidBody(info);
     info.dispose();
     body.setCollisionFlags(

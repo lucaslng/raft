@@ -235,7 +235,7 @@ class SettingsScreen implements Screen {
 		// FOV
 		settings.fov = 60f;
 		fovSlider.setValue(60f);
-		fovLabel.setText("Field of View:  67°");
+		fovLabel.setText("Field of View:  " + Math.round(settings.fov) + "°");
 
 		// Misc
 		settings.debug = false;

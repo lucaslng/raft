@@ -52,7 +52,7 @@ public class SailBuilding extends Building {
 		dims = Util.getDimensions(this.model);
 		shape = new btBoxShape(dims);
 		motionState = new MotionState(this.model.transform, 0f);
-		btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(1f, motionState, shape);
+		btRigidBodyConstructionInfo info = new btRigidBodyConstructionInfo(0f, motionState, shape);
 		body = new btRigidBody(info);
 		info.dispose();
 		body.setCollisionFlags(body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT);

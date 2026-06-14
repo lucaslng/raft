@@ -34,7 +34,7 @@ public class SoundManager {
 			@Override
 			public void accept(StatChangeEvent event) {
 				if (event.health < 0f)
-					damaged.play(.7f * master());
+					damaged.play(.5f * master());
 				if (event.hunger > 0f)
 					eat.play(.9f * master());
 				if (event.thirst > 0f)
