@@ -6,21 +6,7 @@ import com.lucaslng.raft.event.events.BuildingPlacedEvent;
 import com.lucaslng.raft.raft.RaftTile;
 import com.lucaslng.raft.world.World;
 
-/**
- * A holdable that represents a specific building to be placed on the raft.
- *
- * <p>
- * One {@code BuildingItem} covers every building type — the name string is
- * the discriminator.
- * </p>
- *
- * <h3>Consumed on use</h3>
- * <p>
- * After successfully placing the building, this item removes itself from the
- * player's hotbar. The player must craft a new one at the Workbench to place
- * the same building again.
- * </p>
- */
+// Holdable that represents a building that can be placed on the raft
 public class BuildingItem extends Holdable {
 
 	private final String buildingName;
@@ -54,7 +40,7 @@ public class BuildingItem extends Holdable {
 
 		BuildingRegistry registry = world.getBuildingRegistry();
 
-		// Instantiate and place.
+		// Create and place
 		Building building = registry.create(buildingName);
 		if (building == null)
 			return;
@@ -63,7 +49,7 @@ public class BuildingItem extends Holdable {
 		world.getRaftSystem().markDirty();
 		world.getEvents().post(new BuildingPlacedEvent(tile, building));
 
-		// Consume this item — remove it from the hotbar slot.
+		// remove from hotbar
 		world.getPlayer().getHotbar().removeHeldItem();
 	}
 }

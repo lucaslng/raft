@@ -5,6 +5,8 @@ import com.lucaslng.raft.event.Subscriber;
 import com.lucaslng.raft.event.events.PlayerDeathEvent;
 import com.lucaslng.raft.event.events.StatChangeEvent;
 
+// Manages players health, hunger, and thirst
+// They update each frame, as well as through StatChangeEvent
 public class PlayerStats {
 
 	public final StatValue health, hunger, thirst;

@@ -1,6 +1,7 @@
 package com.lucaslng.raft.raft;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
@@ -16,17 +17,14 @@ public class PlacementGhost {
 	private final ModelInstance ghostInstance;
 	private Vector2 targetCoord = null;
 
-	private static final float GHOST_R = 0.4f;
-	private static final float GHOST_G = 0.9f;
-	private static final float GHOST_B = 0.6f;
-	private static final float GHOST_A = 0.45f;
+	private static final Color COLOR = new Color(.4f, .9f, .6f, .45f);
 
 	public PlacementGhost(Model tileModel) {
 		ghostInstance = new ModelInstance(tileModel);
 
 		for (com.badlogic.gdx.graphics.g3d.Material mat : ghostInstance.materials) {
-			mat.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, GHOST_A));
-			mat.set(ColorAttribute.createDiffuse(GHOST_R, GHOST_G, GHOST_B, GHOST_A));
+			mat.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, COLOR.a));
+			mat.set(ColorAttribute.createDiffuse(COLOR));
 		}
 	}
 
@@ -43,6 +41,7 @@ public class PlacementGhost {
 	public void render(ModelBatch batch, Environment env) {
 		if (!isVisible()) return;
 
+		// translucency so we need to disable depth mask
 		Gdx.gl.glDepthMask(false);
 		batch.render(ghostInstance, env);
 		Gdx.gl.glDepthMask(true);

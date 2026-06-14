@@ -14,15 +14,7 @@ import com.lucaslng.raft.physics.MotionState;
 import com.lucaslng.raft.rendering.hud.WorkbenchPanel;
 import com.lucaslng.raft.util.Util;
 
-/**
- * A crafting bench that lets the player craft unlocked recipes in exchange for
- * backpack items. Opening the workbench (right-click) shows the
- * {@link WorkbenchPanel} which lists all currently unlocked recipes.
- *
- * <p>
- * The workbench has no per-frame logic — it is purely interactive.
- * </p>
- */
+// Workbench, doesn't perform any logic other than opening the panel
 public class Workbench extends Building {
 
   public static final String NAME = "Workbench";
@@ -54,7 +46,6 @@ public class Workbench extends Building {
 
   @Override
   public void update(float delta) {
-    // No per-frame logic needed.
   }
 
   @Override

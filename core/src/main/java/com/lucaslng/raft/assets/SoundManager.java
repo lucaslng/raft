@@ -43,6 +43,7 @@ public class SoundManager {
 		});
 	}
 
+	// helper method to easily register a sound effect
 	private void sfx(Class<? extends Event> eventType, String fileName, float volume) {
 		Sound sound = getSfx(fileName);
 		events.subscribe(eventType, e -> sound.play(volume * master()));

@@ -6,6 +6,8 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.Main;
 
+// manages a Stack of screens
+// Singleton
 public class ScreenManager implements Disposable {
 	
 	private final Main game;
@@ -24,6 +26,7 @@ public class ScreenManager implements Disposable {
 		game.setScreen(screen);
 	}
 
+	// resets the stack with a new screen
 	public void replace(Screen screen) {
 		dispose();
 		stack.clear();
@@ -31,11 +34,13 @@ public class ScreenManager implements Disposable {
 		setScreen(screen);
 	}
 
+	// adds to the top of the stack
 	void push(Screen screen) {
 		stack.add(screen);
 		setScreen(screen);
 	}
 
+	// removes the top of the stack
 	void pop() {
 		if (stack.size() <= 1)
 			return;

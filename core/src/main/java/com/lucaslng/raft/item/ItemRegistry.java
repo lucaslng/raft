@@ -6,15 +6,17 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.lucaslng.raft.assets.Assets;
 import com.lucaslng.raft.util.Util;
 
+
+// registry of item types
 public class ItemRegistry {
 
-	private final HashMap<String, Item> registry;
+	private final HashMap<String, Item> registry = new HashMap<>();
 
 	private static ItemRegistry instance;
 
-	public ItemRegistry(Assets assets) {
+	public ItemRegistry() {
 		instance = this;
-		registry = new HashMap<>();
+		Assets assets = Assets.get();
 		put("Wood", "A floating wood plank.", assets.get("models/debris-wood.g3db", Model.class));
 		put("Stone", "A few rocks", assets.get("models/debris-stone.g3db", Model.class));
 

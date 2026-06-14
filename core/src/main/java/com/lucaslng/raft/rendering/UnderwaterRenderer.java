@@ -7,23 +7,18 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.utils.Disposable;
 
-/**
- * Renders a full-screen blue tint when the camera is below the water surface (y
- * < 0).
- * Simple and cheap — just an alpha-blended rectangle over the whole screen.
- */
+// render blue tint while underwater
 class UnderwaterRenderer implements Disposable {
 
 	private static final Color TINT = new Color(0.04f, 0.16f, 0.35f, 0.65f);
 
 	private final ShapeRenderer shapes = new ShapeRenderer();
 
-	/** Call after all 3D rendering, before the HUD. */
 	void renderIfSubmerged(float cameraY) {
 		if (cameraY >= 0f)
 			return;
 
-		// Fade in as the camera goes deeper (max alpha at depth >= 3 units)
+		// deeper -> more blue
 		float depth = Math.min(-cameraY / 3f, 1f);
 		float alpha = TINT.a * depth;
 

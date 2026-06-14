@@ -15,6 +15,8 @@ import com.lucaslng.raft.item.ItemStack;
 import com.lucaslng.raft.physics.MotionState;
 import com.lucaslng.raft.util.Util;
 
+// Farm that generates cauliflowers
+// Player collects by right clicking
 public class Farm extends Building {
 
   public static final float PLANT_SEC = 10f;

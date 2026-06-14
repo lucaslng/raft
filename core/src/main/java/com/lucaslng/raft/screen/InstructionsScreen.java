@@ -14,6 +14,7 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.lucaslng.raft.assets.Assets;
 
+// Shows instructions
 class InstructionsScreen implements Screen {
 
 	private final Stage stage;
@@ -41,33 +42,31 @@ class InstructionsScreen implements Screen {
 
 		scrollPane = new ScrollPane(table, skin);
 		scrollPane.setFadeScrollBars(false);
-		scrollPane.setScrollingDisabled(true, false);
+		scrollPane.setScrollingDisabled(true, false); // vertical scrolling
 		wrapper.add(scrollPane).expand().fill();
 
 		table.add(new Label("Instructions", skin, "title")).padBottom(40f).row();
 
-		// ── Controls ──────────────────────────────────────────────────────
-		addSection(table, skin, "Controls");
-		addRow(table, skin, "Move",           "W / A / S / D");
-		addRow(table, skin, "Look",           "Mouse");
+		addSection(table, skin, "Default Controls");
+		addRow(table, skin, "Move", "W / A / S / D");
+		addRow(table, skin, "Look", "Mouse");
 		addRow(table, skin, "Jump / Swim up", "Space");
-		addRow(table, skin, "Dive",           "Shift");
-		addRow(table, skin, "Place / Use",    "Left Mouse Button");
-		addRow(table, skin, "Interact",       "Right Mouse Button");
-		addRow(table, skin, "Inventory",      "Tab");
-		addRow(table, skin, "Hotbar slots",   "1 - 8");
-		addRow(table, skin, "Unlock cursor",  "Escape");
+		addRow(table, skin, "Place / Use", "Left Mouse Button");
+		addRow(table, skin, "Interact", "Right Mouse Button");
+		addRow(table, skin, "Hotbar slots", "1 - 8");
 
-		// ── Gameplay ──────────────────────────────────────────────────────
 		addSection(table, skin, "Gameplay");
-		addRow(table, skin, "Collect debris",  "Approach floating items and left-click");
-		addRow(table, skin, "Expand raft",     "Hold Hammer (slot 1), aim at raft edge, left-click");
-		addRow(table, skin, "Place buildings", "Select a building from the hotbar, aim at empty tile");
-		addRow(table, skin, "Cook food",       "Place a Cooking Pot, right-click it, select an item");
-		addRow(table, skin, "Drink water",     "Place a Water Filter and right-click when charged");
-		addRow(table, skin, "Steer raft",      "Place a Sail and right-click it to set heading");
+		addRow(table, skin, "Collect trash", "Left-click floating items to collect");
+		addRow(table, skin, "Expand raft", "Hold Hammer (slot 1) and left-click raft");
+		addRow(table, skin, "Place buildings", "Select a building from the hotbar and left-click raft");
+		addRow(table, skin, "Craft", "Place your workbench, right-click it, select a recipe");
+		addRow(table, skin, "Cook food", "Place a Cooking Pot, right-click it, select an item");
+		addRow(table, skin, "Drink water", "Place a Water Filter and right-click to drink");
+		addRow(table, skin, "Grow food", "Place a Farm and right-click to collect");
+		addRow(table, skin, "Steer raft", "Place a Sail and right-click it to set heading");
+		addRow(table, skin, "Escape", "Keep heading north to find the safe haven");
 
-		table.add().expandY().row(); // vertical spacer
+		table.add().expandY().row();
 
 		TextButton backButton = new TextButton("Back", skin);
 		backButton.addListener(new ChangeListener() {
@@ -79,21 +78,17 @@ class InstructionsScreen implements Screen {
 		table.add(backButton).colspan(2).width(240f).height(60f).padTop(20f).row();
 	}
 
-	// ── Layout helpers ────────────────────────────────────────────────────────
-
-	/** Yellow section header spanning both columns. */
+	// helper method to add a section
 	private void addSection(Table table, Skin skin, String heading) {
 		table.add(new Label(heading, skin, "yellow"))
 				.colspan(2).left().padTop(20f).padBottom(6f).row();
 	}
 
-	/** One instruction row: white key label on left, white description on right. */
+	// helper method to add a row with a key and description
 	private void addRow(Table table, Skin skin, String key, String description) {
-		table.add(new Label(key + ":", skin, "white")).right().padRight(20f).padBottom(4f);
-		table.add(new Label(description, skin, "white")).left().padBottom(4f).row();
+		table.add(new Label(key + ":", skin)).right().padRight(20f).padBottom(4f);
+		table.add(new Label(description, skin)).left().padBottom(4f).row();
 	}
-
-	// ── Screen lifecycle ──────────────────────────────────────────────────────
 
 	@Override
 	public void render(float delta) {
@@ -113,12 +108,21 @@ class InstructionsScreen implements Screen {
 		stage.setScrollFocus(scrollPane);
 	}
 
-	@Override public void pause()  {}
-	@Override public void resume() {}
-	@Override public void hide()   {}
+	@Override
+	public void pause() {
+	}
+
+	@Override
+	public void resume() {
+	}
+
+	@Override
+	public void hide() {
+	}
 
 	@Override
 	public void dispose() {
-		for (Disposable d : disposables) d.dispose();
+		for (Disposable d : disposables)
+			d.dispose();
 	}
 }

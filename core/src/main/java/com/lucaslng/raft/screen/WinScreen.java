@@ -14,6 +14,7 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.lucaslng.raft.assets.Assets;
 
+// Shows screen when won, almost identical to DeathScreen
 class WinScreen implements Screen {
 
 	private final Stage stage;

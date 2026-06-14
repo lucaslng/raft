@@ -14,31 +14,7 @@ import com.lucaslng.raft.player.PlayerBlueprints;
 import com.lucaslng.raft.player.PlayerStats;
 import com.lucaslng.raft.util.Util;
 
-/**
- * The player entity.
- *
- * <h3>First-person rendering</h3>
- * <p>
- * In a first-person game the player's own 3-D mesh must NOT be drawn — the
- * camera is effectively inside the model's head. {@link #getInstance()} is
- * overridden to return {@code null} so that
- * {@link com.lucaslng.raft.entity.EntitySystem}
- * skips this instance when building the opaque draw list.
- * </p>
- * <p>
- * The physics capsule/box shape (managed by {@link PlayerPhysics}) is still
- * fully active and provides correct collision response with the raft tiles,
- * shark, buildings, etc.
- * </p>
- *
- * <h3>Animation</h3>
- * <p>
- * The {@link AnimationController} is retained so animations can be triggered in
- * future (e.g. if a third-person shadow or hands are added). Each frame
- * {@link AnimationController#update(float)} is called to keep bone state
- * current.
- * </p>
- */
+// Player class, manages classes which have different responsibilities for the player
 public class Player extends Entity {
 
 	private final PlayerPhysics physics;
@@ -46,6 +22,8 @@ public class Player extends Entity {
 	private final Backpack backpack;
 	private final Hotbar hotbar;
 	private final PlayerBlueprints blueprints;
+
+	// currently no animations, but in the future animations could be added
 	private final AnimationController animationController;
 
 	public Player(Model model, Vector3 position, EventBus events,
@@ -64,28 +42,16 @@ public class Player extends Entity {
 		blueprints = new PlayerBlueprints(events, craftingRegistry);
 	}
 
-	// ── Entity interface ──────────────────────────────────────────────────────
-
 	@Override
 	public void update(float delta) {
-		// Keep animation state advancing (bones stay posed for future hand/shadow
-		// rendering even when not shown).
 		animationController.update(delta);
 		stats.update(delta);
 	}
-
-	/**
-	 * Returns {@code null} so that {@link EntitySystem#getInstances()} skips the
-	 * player mesh in the opaque render list.
-	 *
-	 * <p>
-	 * This is the simplest first-person hiding technique — no separate
-	 * render pass, no stencil, no layer mask.
-	 * </p>
-	 */
+	
+	// don't render player, hide it
 	@Override
 	public ModelInstance getInstance() {
-		return null; // hidden in first-person — physics body still active
+		return null;
 	}
 
 	@Override
@@ -93,23 +59,11 @@ public class Player extends Entity {
 		return physics.getBody();
 	}
 
-	// ── Transform helpers ─────────────────────────────────────────────────────
-
-	/**
-	 * Syncs the model transform from the physics body so helper methods like
-	 * {@link #getPosition()} return the correct value.
-	 *
-	 * <p>
-	 * Called from {@link PlayerPhysics} via the
-	 * {@link com.lucaslng.raft.physics.MotionState}
-	 * each physics sub-step — no manual call needed per frame.
-	 * </p>
-	 */
 	public void setRotation(Vector3 direction, Vector3 up) {
 		transform.rotateTowardDirection(direction, up);
 	}
 
-	// ── Stat / inventory accessors ────────────────────────────────────────────
+	// Getters
 
 	public PlayerStats getStats() {
 		return stats;
@@ -127,19 +81,14 @@ public class Player extends Entity {
 		return blueprints;
 	}
 
-	// ── Clickable ─────────────────────────────────────────────────────────────
-
 	@Override
 	public void onClick(EventBus events) {
-		// No interaction when clicking on oneself
 	}
 
 	@Override
 	public String getInteractHint() {
 		return "";
 	}
-
-	// ── Disposal ──────────────────────────────────────────────────────────────
 
 	@Override
 	public void dispose() {

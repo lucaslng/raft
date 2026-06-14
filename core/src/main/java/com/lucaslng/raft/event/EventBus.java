@@ -2,7 +2,8 @@ package com.lucaslng.raft.event;
 
 import java.util.*;
 
-// EventBus
+// Maps events to subscribers so that subscribers can update themselves without being coupled to objects posting events
+// Singleton
 public class EventBus {
 
 	private final Map<Class<? extends Event>, List<Subscriber<Event>>> subscribers = new HashMap<>();

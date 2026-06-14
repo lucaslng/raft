@@ -18,6 +18,8 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.lucaslng.raft.assets.Assets;
 import com.lucaslng.raft.util.Util;
 
+// Shows loading bar for assets
+// Can't use assets because they are loading
 public class LoadingScreen implements Screen {
 
 	private final Assets assets;
@@ -35,8 +37,6 @@ public class LoadingScreen implements Screen {
 				Gdx.graphics.getBackBufferHeight()));
 		disposables.add(stage);
 
-		// Build the progress bar using the same dark palette as the other screens.
-		// The skin isn't ready yet at this point, so we construct the style manually.
 		Texture barBg   = Util.generateTexture(new Color(0.3f, 0.3f, 0.3f, 1f), 8);
 		Texture barFill = Util.generateTexture(Color.WHITE, 8);
 		disposables.add(barBg);
@@ -46,25 +46,24 @@ public class LoadingScreen implements Screen {
 		style.background = new TextureRegionDrawable(barBg);
 		style.knobBefore  = new TextureRegionDrawable(barFill);
 
-		progressBar = new ProgressBar(0f, 1f, 0.01f, false, style);
+		progressBar = new ProgressBar(0f, 1f, 0.001f, false, style);
 
 		Table table = new Table();
 		table.setFillParent(true);
 		stage.addActor(table);
 		table.add(progressBar).center().width(400f).height(12f);
 
-		Bullet.init();
+		Bullet.init(); // init physics engine
 	}
 
 	@Override
 	public void render(float delta) {
-		if (assets.update()) {
+		if (assets.update()) { // returns true when assets done loading
 			screenManager.replace(new MainMenuScreen());
 		}
 
 		progressBar.setValue(assets.getProgress());
 
-		// Solid dark background — matches the rest of the menu suite.
 		ScreenUtils.clear(0.12f, 0.12f, 0.12f, 1f);
 		stage.act(delta);
 		stage.draw();

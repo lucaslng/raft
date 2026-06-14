@@ -13,6 +13,7 @@ import com.lucaslng.raft.event.events.StatChangeEvent;
 import com.lucaslng.raft.physics.MotionState;
 import com.lucaslng.raft.util.Util;
 
+// Building that generates water for player to quench first
 public class WaterFilter extends Building {
 
   public static final float THIRST_RESTORE_PER_SEC = .01f;

@@ -14,6 +14,7 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.lucaslng.raft.assets.Assets;
 
+// Main menu with the main buttons
 class MainMenuScreen implements Screen {
 
 	private final Stage stage;
@@ -36,6 +37,7 @@ class MainMenuScreen implements Screen {
 
 		table.add(new Label("Raft", skin, "title")).padBottom(48f).row();
 
+		// play
 		TextButton playButton = new TextButton("Play", skin);
 		playButton.addListener(new ChangeListener() {
 			@Override
@@ -45,6 +47,7 @@ class MainMenuScreen implements Screen {
 		});
 		table.add(playButton).width(320f).height(60f).padBottom(12f).row();
 
+		// instructions
 		TextButton instructionsButton = new TextButton("Instructions", skin);
 		instructionsButton.addListener(new ChangeListener() {
 			@Override
@@ -54,6 +57,7 @@ class MainMenuScreen implements Screen {
 		});
 		table.add(instructionsButton).width(320f).height(60f).padBottom(12f).row();
 
+		// settings
 		TextButton settingsButton = new TextButton("Settings", skin);
 		settingsButton.addListener(new ChangeListener() {
 			@Override
@@ -63,6 +67,7 @@ class MainMenuScreen implements Screen {
 		});
 		table.add(settingsButton).width(320f).height(60f).padBottom(12f).row();
 
+		// about
 		TextButton aboutButton = new TextButton("About", skin);
 		aboutButton.addListener(new ChangeListener() {
 			@Override
@@ -72,6 +77,7 @@ class MainMenuScreen implements Screen {
 		});
 		table.add(aboutButton).width(320f).height(60f).padBottom(12f).row();
 
+		// exit
 		TextButton exitButton = new TextButton("Exit", skin);
 		exitButton.addListener(new ChangeListener() {
 			@Override

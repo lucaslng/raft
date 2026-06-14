@@ -5,12 +5,13 @@ import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.events.ItemCollectedEvent;
 import com.lucaslng.raft.item.ItemStack;
 
+// A floating item which gives you the item with a quantity when collected using an event
 public class OceanItem extends OceanTrash {
 
 	private final ItemStack items;
 
-	public OceanItem(ItemStack itemStack, Vector2 position, Vector2 windDir) {
-		super(itemStack.item.model, position, windDir);
+	public OceanItem(ItemStack itemStack, Vector2 position, Vector2 windDir, Player player) {
+		super(itemStack.item.model, position, windDir, player);
 		this.items = itemStack;
 	}
 

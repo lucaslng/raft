@@ -14,6 +14,8 @@ import com.lucaslng.raft.item.Item;
 import com.lucaslng.raft.player.Backpack;
 import com.lucaslng.raft.world.World;
 
+// Panel for cooking pot building
+// Refreshes when CookingState changes
 public class CookingPanel implements Panel {
 
 	private final CookingPot cookingPot;
@@ -73,6 +75,8 @@ public class CookingPanel implements Panel {
 				child.clearChildren(false);
 
 				if (cookingPot.getState() == CookingState.EMPTY) {
+					// List out cookable items that you have
+					// Currently only Cauliflower is cookable, so this loop can only run once
 					for (Entry<Item, Integer> e : backpack.getSortedBackpackView()) {
 						Item item = e.getKey();
 						if (!CookingPot.isCookable(item))

@@ -16,10 +16,10 @@ class OceanRenderer implements Disposable {
 
   private static final int N = 128; // resolution, power of 2
   private static final float PATCH_SIZE = 200f; // tile size
-  private static final float WIND_SPEED = 15f; // wave height & freq
+  private static final float WIND_SPEED = 25f; // wave height & freq
   private static final float WIND_DIR_X = 1f; // wind direction
   private static final float WIND_DIR_Z = 0.8f;
-  private static final float PHILLIPS_CONSTANT = 100f; // wave amp
+  private static final float PHILLIPS_CONSTANT = 10f; // wave amp
   private static final int TILES_DIM = 5; // tiles dimensions
   // water colours
   private static final float DEEP_R = 0.04f, DEEP_G = 0.16f, DEEP_B = 0.35f;
@@ -38,11 +38,11 @@ class OceanRenderer implements Disposable {
   private final FloatFFT_2D fft2d = new FloatFFT_2D(N, N);
   private final float[] complexBuffer = new float[N * N * 2]; // reused
 
-  // Initial spectrum h₀(k)
+  // Initial spectrum
   private final float[][] h0Re = new float[N][N];
   private final float[][] h0Im = new float[N][N];
 
-  // Frequency‑domain arrays (updated each frame)
+  // Frequency-domain arrays
   private final float[][] freqHeightRe = new float[N][N];
   private final float[][] freqHeightIm = new float[N][N];
   private final float[][] freqGradXRe = new float[N][N];
@@ -50,14 +50,14 @@ class OceanRenderer implements Disposable {
   private final float[][] freqGradZRe = new float[N][N];
   private final float[][] freqGradZIm = new float[N][N];
 
-  // Spatial‑domain outputs (row‑major)
+  // Spatial-domain outputs
   private final float[] heights = new float[N * N];
   private final float[] gradX = new float[N * N];
   private final float[] gradZ = new float[N * N];
   private final float[] baseX = new float[N * N];
   private final float[] baseZ = new float[N * N];
 
-  // Vertex buffer: position (3) + normal (3) + uv (2) = 8 floats per vertex
+  // position (3) + normal (3) + uv (2) = 8 floats per vertex
   private static final int VERTEX_STRIDE = 8;
   private final float[] vertices;
 
@@ -101,7 +101,7 @@ class OceanRenderer implements Disposable {
   protected void render(Camera camera, float delta) {
     elapsedTime += delta;
 
-    // Evolve spectrum and perform 2D IFFTs to get spatial fields
+    // Evolve the wave by deltatime and perform 2D IFFTs
     evolveSpectrum(elapsedTime);
     runIFFT2D(freqHeightRe, freqHeightIm, heights);
     runIFFT2D(freqGradXRe, freqGradXIm, gradX);
@@ -112,7 +112,7 @@ class OceanRenderer implements Disposable {
     shader.bind();
     setGlobalUniforms(camera);
 
-    // Snap camera position to tile grid for seamless tiling
+    // Snap camera position to tile grid
     float snapX = (float) Math.floor(camera.position.x / PATCH_SIZE) * PATCH_SIZE;
     float snapZ = (float) Math.floor(camera.position.z / PATCH_SIZE) * PATCH_SIZE;
 
@@ -217,29 +217,28 @@ class OceanRenderer implements Disposable {
         float cosOt = MathUtils.cos(omega * t);
         float sinOt = MathUtils.sin(omega * t);
 
-        // Positive wave vector term: h₀(k) * e^(iωt)
+        // positive wave vector term
         float posRe = h0Re[m][n] * cosOt - h0Im[m][n] * sinOt;
         float posIm = h0Re[m][n] * sinOt + h0Im[m][n] * cosOt;
 
-        // Negative wave vector index: (-k) corresponds to (N-m)%N and (N-n)%N
+        // negative wave vector index
         int mNeg = (N - m) % N;
         int nNeg = (N - n) % N;
 
-        // Conjugate of h₀(-k) * e^(-iωt) → h₀(-k)* * (cos - i sin)
-        // = (h0Re[mNeg][nNeg] - i h0Im[mNeg][nNeg]) * (cosOt - i sinOt)
-        // Expand and add the complex conjugate contribution:
+        // some math which i don't understand
         float negRe = h0Re[mNeg][nNeg] * cosOt + h0Im[mNeg][nNeg] * sinOt;
         float negIm = -h0Re[mNeg][nNeg] * sinOt + h0Im[mNeg][nNeg] * cosOt;
 
-        // Total h(k,t) = pos + neg
+        // real and imaginary parts
+        // idk
         float re = posRe + negRe;
         float im = posIm + negIm;
 
         freqHeightRe[m][n] = re;
         freqHeightIm[m][n] = im;
 
+        // more math that i don't understand
         if (kLen > 1e-6f) {
-          // Gradient i*k*h: real = -im*k, imag = re*k
           freqGradXRe[m][n] = -im * kx;
           freqGradXIm[m][n] = re * kx;
           freqGradZRe[m][n] = -im * kz;
@@ -255,6 +254,7 @@ class OceanRenderer implements Disposable {
   private void runIFFT2D(float[][] re, float[][] im, float[] out) {
     int half = N / 2;
 
+    // copy into buffer to use fft library
     for (int m = 0; m < N; m++) {
       for (int n = 0; n < N; n++) {
         int sm = (m + half) % N; // shifted row index
@@ -266,7 +266,7 @@ class OceanRenderer implements Disposable {
     }
 
     fft2d.complexInverse(complexBuffer, true);
-    // Copy real parts into out
+    // copy real parts into out
     for (int i = 0; i < N * N; i++) {
       out[i] = complexBuffer[i * 2];
     }

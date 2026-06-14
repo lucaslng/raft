@@ -2,11 +2,8 @@ package com.lucaslng.raft.world;
 
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 
-/**
- * Implemented by anything that should receive a selection outline
- * when hovered. Companion to {@link Clickable}.
- */
+// Something that should have an outline when hovered
 public interface Outlineable {
-    /** The model instance to outline. Must not be null. */
+    // The model instance to outline, not nullable
     ModelInstance getOutlineInstance();
 }

@@ -6,6 +6,7 @@ import com.lucaslng.raft.assets.Assets;
 import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.events.BlueprintLearnedEvent;
 
+// A floating blueprint which unlocks the next recipe by posting an event
 public class OceanBlueprint extends OceanTrash {
 
 	static private Model blueprintModel;
@@ -16,8 +17,8 @@ public class OceanBlueprint extends OceanTrash {
 		return blueprintModel;
 	}
 
-	public OceanBlueprint(Vector2 position, Vector2 windDir, Assets assets) {
-		super(getBlueprintModel(assets), position, windDir);
+	public OceanBlueprint(Vector2 position, Vector2 windDir, Player player, Assets assets) {
+		super(getBlueprintModel(assets), position, windDir, player);
 	}
 
 	@Override

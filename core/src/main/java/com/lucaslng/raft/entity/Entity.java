@@ -1,7 +1,5 @@
 package com.lucaslng.raft.entity;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
@@ -9,18 +7,15 @@ import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.utils.Disposable;
 import com.lucaslng.raft.world.Clickable;
 
+// Abstract base class for an object in the world
 public abstract class Entity implements Disposable, Clickable {
 	
-	private static final AtomicInteger ID_GEN = new AtomicInteger();
-	public final int id;
-
 	protected final Matrix4 transform;
 	protected final ModelInstance model;
 
 	protected boolean active = true;
 
 	protected Entity(ModelInstance model) {
-		id = ID_GEN.getAndIncrement();
 		this.model = model;
 		this.transform = model.transform;
 	}

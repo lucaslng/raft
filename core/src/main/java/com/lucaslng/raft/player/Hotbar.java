@@ -7,6 +7,7 @@ import com.lucaslng.raft.event.events.HotbarIndexEvent;
 import com.lucaslng.raft.player.holdable.Holdable;
 import com.lucaslng.raft.player.holdable.Hammer;
 
+// Stores player's holdable items
 public class Hotbar {
 
   public static final int HOTBAR_SIZE = 8;
@@ -18,11 +19,9 @@ public class Hotbar {
     hotbar = new Holdable[HOTBAR_SIZE];
     heldIndex = 0;
 
-    // Slot 0 is always the Hammer (tile-placing tool).
+    // Slot 0 is always Hammer
     hotbar[0] = new Hammer();
 
-    // Any holdable item received (e.g. BuildingItems crafted at a Workbench)
-    // goes into the next free slot starting at index 1.
     events.subscribe(HoldableItemRecievedEvent.class, new Subscriber<HoldableItemRecievedEvent>() {
       @Override
       public void accept(HoldableItemRecievedEvent event) {
@@ -52,23 +51,13 @@ public class Hotbar {
     return (index >= 0 && index < HOTBAR_SIZE) ? hotbar[index] : null;
   }
 
-  /**
-   * Removes the currently held item from its hotbar slot (nulls it out).
-   * Slot 0 (the Hammer) is never removed.
-   * Used when a {@link com.lucaslng.raft.player.holdable.BuildingItem} is
-   * consumed on placement.
-   */
   public void removeHeldItem() {
     if (heldIndex == 0)
-      return; // Hammer slot is permanent
+      return; // hammer is permanent
     hotbar[heldIndex] = null;
-    // Switch to slot 0 (Hammer) so the player isn't left holding nothing.
-    heldIndex = 0;
   }
 
-  /**
-   * Returns the first free slot (index ≥ 1). Slot 0 is reserved for the Hammer.
-   */
+  // returns next empty slot index, or -1 if all occupied
   private int nextFreeSlot() {
     for (int i = 1; i < hotbar.length; i++)
       if (hotbar[i] == null)

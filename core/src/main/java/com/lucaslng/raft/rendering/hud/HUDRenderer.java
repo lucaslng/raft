@@ -28,22 +28,7 @@ import com.lucaslng.raft.util.Util;
 import com.lucaslng.raft.world.Clickable;
 import com.lucaslng.raft.world.World;
 
-/**
- * Renders the 2-D heads-up display including:
- * <ul>
- * <li>Stat bars (health, hunger, thirst)</li>
- * <li>Placement hint label</li>
- * <li>Inventory overlay</li>
- * <li>Building UI panels — opened when the player right-clicks a building</li>
- * </ul>
- *
- * <h3>BuildingItem hint</h3>
- * <p>
- * BuildingItems are now crafted at the Workbench and consumed on placement, so
- * the hint no longer shows ingredient costs. It simply shows the tile state and
- * confirms that left-click will place.
- * </p>
- */
+// Handles all 2D rendering on top of the game
 public class HUDRenderer implements Disposable {
 
 	private final Skin skin;
@@ -77,7 +62,7 @@ public class HUDRenderer implements Disposable {
 				Gdx.graphics.getBackBufferHeight()));
 		disposables.add(stage);
 
-		// ── FPS label ─────────────────────────────────────────────────────
+		// FPS label
 		Label fpsLabel = new Label("", skin);
 		fpsLabel.addAction(new Action() {
 			@Override
@@ -105,20 +90,20 @@ public class HUDRenderer implements Disposable {
 		northContainer.center().top().pad(10);
 		stage.addActor(northContainer);
 
-		// ── Crosshair ──────────────────────────────────────────────────────
+		// Crosshair
 		Container<Image> crosshair = new Container<>(
 				new Image(assets.get("images/crosshair-normal.png", Texture.class)));
 		crosshair.setFillParent(true);
 		crosshair.center().size(32);
 		stage.addActor(crosshair);
 
-		// ── Hint label ────────────────────────────────────────────────────
+		// Hint label below crosshair
 		hintLabel = new Label("", skin, "yellow");
-		Container<Label> hintContainer = new Container<>(hintLabel).top().center().padTop(72f);
+		Container<Label> hintContainer = new Container<>(hintLabel).top().center().padTop(78f);
 		hintContainer.setFillParent(true);
 		stage.addActor(hintContainer);
 
-		// ── Stat bars ─────────────────────────────────────────────────────
+		// Stat bars
 		Texture statBarBg = Util.generateTexture(Color.BROWN, 20);
 		Texture healthFill = Util.generateTexture(new Color(0.85f, 0.15f, 0.15f, 1f), 20);
 		Texture hungerFill = Util.generateTexture(new Color(0.90f, 0.65f, 0.10f, 1f), 20);
@@ -150,7 +135,7 @@ public class HUDRenderer implements Disposable {
 		hotbarTable.bottom().right().pad(16);
 		stage.addActor(hotbarTable);
 
-		// ── Inventory ─────────────────────────────────────────────────────
+		// Backpack
 		inventoryTable.setFillParent(true);
 		inventoryTable.top().left().pad(14f);
 		stage.addActor(inventoryTable);
@@ -162,6 +147,8 @@ public class HUDRenderer implements Disposable {
 		panelTable.setBackground(new TextureRegionDrawable(bg));
 		disposables.add(bg);
 		stage.addActor(panelTable);
+		// Panels show on PanelOpenedEvent
+		// if the event's panel is null, then close the panel
 		events.subscribe(PanelOpenedEvent.class, event -> {
 			if (event.panel != null) {
 				panelTable.clear();
@@ -176,16 +163,14 @@ public class HUDRenderer implements Disposable {
 		});
 	}
 
-	// ── Per-frame render ─────────────────────────────────────────────────────
-
 	public void render(float delta) {
-		// ── Stat bars ──────────────────────────────────────────────────────
+		// update stat bars
 		PlayerStats stats = world.getPlayer().getStats();
 		healthBar.setValue(stats.getHealth());
 		hungerBar.setValue(stats.getHunger());
 		thirstBar.setValue(stats.getThirst());
 
-		// ── Hotbar ─────────────────────────────────────────────────────────
+		// refresh hotbar
 		hotbarTable.clear();
 		Hotbar hotbar = world.getPlayer().getHotbar();
 		for (int i = 0; i < Hotbar.HOTBAR_SIZE; i++) {
@@ -195,7 +180,7 @@ public class HUDRenderer implements Disposable {
 						i == hotbar.getHeldIndex() ? "green" : "white")).row();
 		}
 
-		// ── Hint label ─────────────────────────────────────────────────────
+		// Set hint text
 		Holdable held = world.getPlayer().getHotbar().getHeldItem();
 
 		if (held instanceof Hammer && world.getPlacementGhost().isVisible()) {
@@ -205,13 +190,12 @@ public class HUDRenderer implements Disposable {
 			hintLabel.setText("[LMB] Place plank  (Wood: " + wood + " / " + Hammer.WOOD_COST + ")");
 
 		} else if (held instanceof BuildingItem) {
-			// BuildingItems are crafted — no need to show ingredient costs.
 			BuildingItem item = (BuildingItem) held;
 			RaftTile tile = world.getHoveredRaftTile();
 
 			if (tile == null) {
 				hintLabel.setStyle(skin.get("yellow", LabelStyle.class));
-				hintLabel.setText(item.getName() + " — aim at an empty raft tile");
+				hintLabel.setText(item.getName() + " - aim at an empty raft tile");
 			} else if (tile.hasBuilding()) {
 				hintLabel.setStyle(skin.get("yellow", LabelStyle.class));
 				hintLabel.setText("Tile occupied: " + tile.getBuilding().getName());
@@ -225,7 +209,7 @@ public class HUDRenderer implements Disposable {
 			hintLabel.setText(hoveredClickable != null ? hoveredClickable.getInteractHint() : "");
 		}
 
-		// ── Inventory list ─────────────────────────────────────────────────
+		// inventory
 		inventoryTable.clear();
 		for (Entry<Item, Integer> entry : world.getPlayer().getBackpack().getSortedBackpackView()) {
 			inventoryTable.add(
@@ -250,6 +234,7 @@ public class HUDRenderer implements Disposable {
 			d.dispose();
 	}
 
+	// Create a styled stat bar with background and foreground colors
 	private static ProgressBar makeStatBar(Texture bg, Texture fill) {
 		ProgressBarStyle style = new ProgressBarStyle();
 		style.background = new TextureRegionDrawable(bg);

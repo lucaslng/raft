@@ -3,6 +3,7 @@ package com.lucaslng.raft.physics;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.physics.bullet.linearmath.btMotionState;
 
+// Used by Bullet physics engine to sync physics world and outside world
 public class MotionState extends btMotionState {
 
 	private final Matrix4 transform;

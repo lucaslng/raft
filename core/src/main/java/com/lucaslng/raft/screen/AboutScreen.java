@@ -14,6 +14,7 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.lucaslng.raft.assets.Assets;
 
+// Shows About screen
 class AboutScreen implements Screen {
 
 	private final Stage stage;
@@ -38,13 +39,12 @@ class AboutScreen implements Screen {
 
 		table.add(new Label("About", skin, "title")).padBottom(40f).row();
 
-		// Author / date / description block
 		String body =
 				"Lucas Leung\n" +
 				"Friday, June 12th, 2026\n\n" +
 				"Survive the harsh seas on your little raft!\n" +
-				"Collect debris, build structures, manage your hunger\n" +
-				"and thirst, and stay alive as long as you can.";
+				"Collect trash, build structures, and manage your hunger and thirst. Build a sail to control your raft. Find the rumoured safe haven far up north, but be careful of the Sharks!\n\n" +
+				"Built using libGDX";
 
 		Label bodyLabel = new Label(body, skin, "white");
 		bodyLabel.setWrap(true);

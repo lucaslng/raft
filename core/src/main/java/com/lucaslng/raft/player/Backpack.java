@@ -8,18 +8,14 @@ import com.lucaslng.raft.event.Subscriber;
 import com.lucaslng.raft.event.events.ItemCollectedEvent;
 import com.lucaslng.raft.item.*;
 
+// Stores players stackable items
 public class Backpack {
 
-	private final Map<Item, Integer> backpack;
-	private final Map<String, Item> nameIndex;
-
-	private List<Entry<Item, Integer>> sortedBackpack;
+	private final Map<Item, Integer> backpack = new HashMap<>();
+	private final Map<String, Item> nameIndex = new HashMap<>();
+	private final List<Entry<Item, Integer>> sortedBackpack = new ArrayList<>();
 
 	public Backpack(EventBus events) {
-		backpack = new TreeMap<>();
-		nameIndex = new HashMap<>();
-		sortedBackpack = new ArrayList<>();
-
 		events.subscribe(ItemCollectedEvent.class, new Subscriber<ItemCollectedEvent>() {
 			@Override
 			public void accept(ItemCollectedEvent event) {
@@ -62,7 +58,8 @@ public class Backpack {
 	}
 
 	private void rebuildSortedView() {
-		sortedBackpack = new ArrayList<>(backpack.entrySet());
+		sortedBackpack.clear();
+		sortedBackpack.addAll(backpack.entrySet());
 		Collections.sort(sortedBackpack, (a, b) -> Integer.compare(b.getValue(), a.getValue()));
 	}
 

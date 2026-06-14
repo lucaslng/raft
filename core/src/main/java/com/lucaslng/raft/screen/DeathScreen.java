@@ -14,6 +14,7 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.lucaslng.raft.assets.Assets;
 
+// Shows Death screen
 class DeathScreen implements Screen {
 
 	private final Stage stage;

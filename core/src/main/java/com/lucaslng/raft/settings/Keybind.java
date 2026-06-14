@@ -3,6 +3,8 @@ package com.lucaslng.raft.settings;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 
+// Holds one keybind
+// Very straightforward methods
 public class Keybind {
 
 	private final int defaultKey;
@@ -17,12 +19,10 @@ public class Keybind {
 		key = defaultKey;
 	}
 
-	/** Rebind this keybind to a new key. */
 	public void setKey(int newKey) {
 		key = newKey;
 	}
 
-	/** Returns the current keycode. */
 	public int getKey() {
 		return key;
 	}

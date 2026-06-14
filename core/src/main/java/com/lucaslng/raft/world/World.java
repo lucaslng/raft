@@ -27,51 +27,13 @@ import com.lucaslng.raft.raft.RaftSystem;
 import com.lucaslng.raft.raft.RaftTile;
 import com.lucaslng.raft.settings.Settings;
 
-/**
- * The game-simulation root: owns all subsystems and ticks them each frame.
- *
- * <h3>Swimming</h3>
- * <p>
- * {@link SwimmingSystem} is now owned and driven by
- * {@link com.lucaslng.raft.screen.GameScreen} — it needs the camera direction
- * for swim steering, which is only available after
- * {@link com.lucaslng.raft.player.PlayerController#update(float)} runs.
- * World no longer creates or ticks it.
- * </p>
- *
- * <h3>Crafting system</h3>
- * <p>
- * A {@link CraftingRegistry} is created here and passed to both
- * {@link BuildingRegistry} (which registers all craftable-building recipes in
- * unlock order) and the {@link com.lucaslng.raft.player.PlayerBlueprints}
- * system (via {@link Player}) which calls
- * {@link CraftingRegistry#onBlueprintCollected()} each time the player picks
- * up an ocean blueprint.
- * </p>
- *
- * <h3>Starting inventory</h3>
- * <p>
- * The player begins with a single {@link BuildingItem} for the Workbench.
- * All other buildings must be crafted at the Workbench once the appropriate
- * blueprints have been collected.
- * </p>
- *
- * <h3>Shark AI</h3>
- * <p>
- * Each frame the shark is driven by its own 3-arg
- * {@link Shark#update(float, Vector3, Vector2)} which receives the current
- * player position and the raft's world-space XZ origin so the shark knows
- * where to lurk.
- * </p>
- */
+// Owns all game logic and updates it every frame
 public class World implements Disposable {
 
-	// ── Wind / environment ───────────────────────────────────────────────────
-	private final Vector2 windDir;
+	private final Vector2 windDir = new Vector2(1f, .8f).nor();
 
-	public static final float WIN_DIST = 5000f;
+	public static final float WIN_DISTANCE = 5000f;
 
-	// ── Core systems ─────────────────────────────────────────────────────────
 	private final EventBus events;
 	private final PhysicsSystem physics;
 	private final EntitySystem entitySystem;
@@ -82,11 +44,10 @@ public class World implements Disposable {
 	private final CraftingRegistry craftingRegistry;
 	private final TrashSystem trashSystem;
 
-	// ── Convenience references (live inside entitySystem) ────────────────────
 	private final Player player;
 	private final Shark shark;
 
-	// ── Raycast state (updated every frame in checkRaycast) ──────────────────
+	// Raycast state
 	private Clickable hoveredClickable = null;
 	private RaftTile hoveredRaftTile = null;
 	private Vector2 ghostTarget = null;
@@ -94,31 +55,26 @@ public class World implements Disposable {
 	private final ClosestNotMeRayResultCallback rayCallback;
 
 	private float time = .4f; // 0 - 1 : midnight - midnight
-	static public float DAY_LENGTH_SECONDS = 60f;
+	static public final float DAY_LENGTH_SECONDS = 120f; // 2 minutes per day/night cycle
 
 	public World() {
 		events = EventBus.get();
 		Assets assets = Assets.get();
 		Settings settings = Settings.get();
 
-		windDir = new Vector2(1f, .8f).nor();
-
 		physics = new PhysicsSystem();
 		entitySystem = new EntitySystem(physics);
 
-		// ── Raft ────────────────────────────────────────────────────────────
+		// raft
 		Model tileModel = assets.get("models/platform.g3db", Model.class);
 		raftSystem = new RaftSystem(tileModel, physics);
 		placementGhost = new PlacementGhost(tileModel);
 
-		// ── Crafting system ──────────────────────────────────────────────────
 		craftingRegistry = new CraftingRegistry();
+		itemRegistry = new ItemRegistry();
+		buildingRegistry = new BuildingRegistry(this, craftingRegistry);
 
-		// ── Items / buildings ────────────────────────────────────────────────
-		itemRegistry = new ItemRegistry(assets);
-		buildingRegistry = new BuildingRegistry(assets, this, craftingRegistry);
-
-		// ── Entities ────────────────────────────────────────────────────────
+		// entities
 		player = new Player(
 				assets.get("models/character-male.g3dj", Model.class),
 				new Vector3(0f, 1f, 0f), events, craftingRegistry);
@@ -127,7 +83,7 @@ public class World implements Disposable {
 		for (Material m : sharkModel.materials) {
 			m.set(IntAttribute.createCullFace(0));
 		}
-		// Spawn the shark underwater below the initial raft origin.
+		// spawn shark underwater
 		shark = new Shark(sharkModel, new Vector3(6f, -4f, 0f));
 
 		entitySystem.add(player);
@@ -137,14 +93,16 @@ public class World implements Disposable {
 
 		trashSystem = new TrashSystem(events, physics, itemRegistry, assets, windDir);
 
-		// ── Starting inventory ───────────────────────────────────────────────
+		// start with workbench and some wood
 		events.post(new HoldableItemRecievedEvent(new BuildingItem("Workbench")));
+		player.getBackpack().add(itemRegistry.getItem("Wood"), 10);
 
-		if (settings.debug) {
+		// cheats
+		if (settings.cheats) {
 			player.getBackpack().add(itemRegistry.getItem("Cauliflower"), 100);
-			player.getBackpack().add(itemRegistry.getItem("Wood"), 100);
-			player.getBackpack().add(itemRegistry.getItem("String"), 100);
-			player.getBackpack().add(itemRegistry.getItem("Stone"), 100);
+			player.getBackpack().add(itemRegistry.getItem("Wood"), 200);
+			player.getBackpack().add(itemRegistry.getItem("String"), 300);
+			player.getBackpack().add(itemRegistry.getItem("Stone"), 400);
 			events.post(new BlueprintLearnedEvent());
 			events.post(new BlueprintLearnedEvent());
 			events.post(new BlueprintLearnedEvent());
@@ -152,42 +110,26 @@ public class World implements Disposable {
 		}
 	}
 
-	// ── Per-frame update ─────────────────────────────────────────────────────
-
-	/**
-	 * Advances the simulation one frame.
-	 *
-	 * <p>
-	 * Note: {@link SwimmingSystem} is NOT ticked here — it is driven by
-	 * {@link com.lucaslng.raft.screen.GameScreen} before this method is called,
-	 * so that swim steering uses the already-updated camera direction.
-	 * </p>
-	 *
-	 * @param delta  frame delta (seconds, already capped by GameScreen)
-	 * @param camera the first-person camera (used for raycast direction)
-	 */
 	public void update(float delta, Camera camera) {
 		time += delta / DAY_LENGTH_SECONDS;
 		time %= 1f;
 
 		entitySystem.update(delta);
 
-		// Drive shark AI manually — needs player position + raft origin.
 		shark.update(delta, player.getPosition(), raftSystem.getRaftPosition());
 
 		physics.update(delta);
 		raftSystem.update(delta);
 		raftSystem.drift(windDir, delta);
-		trashSystem.update(delta, player.getPosition());
+		trashSystem.update(delta, player);
 		checkRaycast(camera);
 
-		if (player.getPosition().z >= WIN_DIST) {
+		if (player.getPosition().z >= WIN_DISTANCE) {
 			events.post(new WinEvent());
 		}
 	}
 
-	// ── Raycast ─────────────────────────────────────────────────────────────
-
+	// called every frame
 	private void checkRaycast(Camera cam) {
 		rayCallback.setClosestHitFraction(1f);
 		rayCallback.setCollisionObject(null);
@@ -203,6 +145,7 @@ public class World implements Disposable {
 			return;
 		}
 
+		// objects store themselves in userData
 		Object userData = rayCallback.getCollisionObject().userData;
 
 		if (userData instanceof Clickable) {
@@ -246,7 +189,7 @@ public class World implements Disposable {
 		}
 	}
 
-	// ── Getters ──────────────────────────────────────────────────────────────
+	// Getters
 
 	public float getTime() {
 		return time;
@@ -314,8 +257,6 @@ public class World implements Disposable {
 	public Vector2 getGhostTarget() {
 		return ghostTarget;
 	}
-
-	// ── Disposal ─────────────────────────────────────────────────────────────
 
 	@Override
 	public void dispose() {

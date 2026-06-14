@@ -4,9 +4,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.lucaslng.raft.settings.Settings;
 import com.lucaslng.raft.world.World;
 
-/**
- * The tile-placement tool, always occupying hotbar slot 0.
- */
+// tool to place tiles
 public class Hammer extends Holdable {
 
 	public static final String NAME = "Hammer";
@@ -35,12 +33,12 @@ public class Hammer extends Holdable {
 		if (target == null)
 			return;
 
-		if (!Settings.get().debug) {
+		if (!Settings.get().cheats) {
 			if (world.getPlayer().getBackpack().getCount("Wood") < WOOD_COST)
 				return;
 			world.getPlayer().getBackpack().consume("Wood", WOOD_COST);
 		}
-		
+
 		world.getRaftSystem().placeTile(target);
 		world.getRaftSystem().markDirty();
 	}

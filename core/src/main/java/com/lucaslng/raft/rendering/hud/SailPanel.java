@@ -9,6 +9,7 @@ import com.lucaslng.raft.event.events.PanelOpenedEvent;
 import com.lucaslng.raft.event.events.SailSteerEvent;
 import com.lucaslng.raft.world.World;
 
+// Panel with heading slider to control direction
 public class SailPanel implements Panel {
 
 	private final SailBuilding sail;
@@ -49,17 +50,16 @@ public class SailPanel implements Panel {
 		table.add(slider).width(500f).padBottom(30f).row();
 
 		TextButton close = new TextButton("Close", skin);
-
 		close.addListener(new ChangeListener() {
 			@Override
 			public void changed(ChangeEvent event, Actor actor) {
 				events.post(new PanelOpenedEvent(null));
 			}
 		});
-
 		table.add(close).width(180f).height(60f);
 	}
 
+	// Format degree into readable string
 	private static String formatBearing(float deg) {
 		deg = ((deg % 360f) + 360f) % 360f;
 		String[] cardinals = { "N", "NE", "E", "SE", "S", "SW", "W", "NW", "N" };

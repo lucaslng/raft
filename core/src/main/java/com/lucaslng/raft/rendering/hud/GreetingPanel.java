@@ -7,6 +7,8 @@ import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.events.PanelOpenedEvent;
 import com.lucaslng.raft.world.World;
 
+// Panel that opens at the very start of the game
+// Simply shows a title, description, and close button
 public class GreetingPanel implements Panel {
 
 	@Override

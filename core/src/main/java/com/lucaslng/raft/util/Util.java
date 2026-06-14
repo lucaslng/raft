@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.physics.bullet.collision.btConvexHullShape;
 
+// Static utility methods
 public final class Util {
 
 	// static private Vector3 tempVec3 = new Vector3();
@@ -38,6 +39,7 @@ public final class Util {
 		model.calculateTransforms();
 	}
 
+	// not used anymore
 	public static Vector3 centerModelInstance(ModelInstance instance) {
 		Vector3 center = new Vector3();
 		instance.calculateBoundingBox(tempBounds);
@@ -71,7 +73,7 @@ public final class Util {
 	private static int getPositionOffset(Mesh mesh) {
 		for (VertexAttribute attr : mesh.getVertexAttributes()) {
 			if (attr.usage == VertexAttributes.Usage.Position) {
-				return attr.offset / 4; // bytes → floats
+				return attr.offset / 4; // bytes -> floats
 			}
 		}
 		throw new RuntimeException("No position attribute found in mesh");

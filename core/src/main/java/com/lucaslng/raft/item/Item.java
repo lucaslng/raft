@@ -4,6 +4,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.badlogic.gdx.graphics.g3d.Model;
 
+// Immutable record for an item type
+// Natural sort order is alphabetical by name
 public class Item implements Comparable<Item> {
 	
 	private static final AtomicInteger ID_GEN = new AtomicInteger();

@@ -16,55 +16,16 @@ import com.lucaslng.raft.rendering.hud.GreetingPanel;
 import com.lucaslng.raft.settings.Settings;
 import com.lucaslng.raft.world.World;
 
-/**
- * The main game screen.
- *
- * <h3>Execution order (each frame)</h3>
- * <ol>
- * <li>{@link PlayerController#update(float)} — mouse-look + WASD velocity</li>
- * <li>{@link SwimmingSystem#update} — buoyancy + water drag (needs updated cam
- * direction)</li>
- * <li>{@link World#update(float, com.badlogic.gdx.graphics.Camera)} — physics +
- * AI + raft + raycast</li>
- * <li>{@link GameRenderer#render(float, com.badlogic.gdx.graphics.Camera)} —
- * draw</li>
- * </ol>
- *
- * <h3>Input pipeline</h3>
- * 
- * <pre>
- *   InputMultiplexer
- *     1. HUD Stage          — Scene2D UI eats events when panels/inventory open
- *     2. PlayerController   — hotbar number keys, inventory toggle (keyDown)
- *     3. ClickInputAdapter  — left/right click for world interaction
- * </pre>
- *
- * <h3>Cursor policy</h3>
- * The cursor is caught (hidden) for first-person mouse-look. It is released
- * whenever a UI panel or the inventory opens, and re-caught when they close.
- */
+// Main game screen
 public class GameScreen implements Screen {
-
-	// ── Core systems ──────────────────────────────────────────────────────────
 
 	private final World world;
 	private final EventBus events;
 	private final GameRenderer renderer;
 	private final PlayerController playerController;
-
-	// ── Input ─────────────────────────────────────────────────────────────────
-
 	private final InputMultiplexer inputMultiplexer;
 
-	// ── State ─────────────────────────────────────────────────────────────────
-
-	/** True while any panel (workbench, cooking, sail …) is open. */
 	private boolean panelOpen = false;
-
-	/** True while the backpack / inventory overlay is visible. */
-	private boolean inventoryOpen = false;
-
-	// ── Constructor ───────────────────────────────────────────────────────────
 
 	public GameScreen() {
 		this.events = new EventBus();
@@ -72,7 +33,6 @@ public class GameScreen implements Screen {
 		new SoundManager();
 		world = new World();
 
-		// ── Camera ────────────────────────────────────────────────────────
 		PerspectiveCamera camera = new PerspectiveCamera(
 				settings.fov,
 				Gdx.graphics.getBackBufferWidth(),
@@ -81,26 +41,21 @@ public class GameScreen implements Screen {
 		camera.far = 500f;
 		camera.update();
 
-		// ── Player controller ─────────────────────────────────────────────
 		playerController = new PlayerController(
 				camera,
 				world.getPlayer(),
 				world.getRaftSystem());
 
-		// ── Renderer ──────────────────────────────────────────────────────
 		renderer = new GameRenderer(world);
 
-		// ── Input multiplexer ─────────────────────────────────────────────
+		// Order of input handling:
 		inputMultiplexer = new InputMultiplexer();
-		// 1. Stage — Scene2D UI must be first.
 		inputMultiplexer.addProcessor(renderer.getHudStage());
-		// 2. PlayerController — handles hotbar keys and inventory toggle.
 		inputMultiplexer.addProcessor(playerController);
-		// 3. Click handler.
 		inputMultiplexer.addProcessor(new InputAdapter() {
 			@Override
 			public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-				if (panelOpen || inventoryOpen)
+				if (panelOpen)
 					return false;
 				if (button == Input.Buttons.LEFT) {
 					world.handleLeftClick();
@@ -117,9 +72,7 @@ public class GameScreen implements Screen {
 		Gdx.input.setInputProcessor(inputMultiplexer);
 		Gdx.input.setCursorCatched(true);
 
-		// ── Event subscriptions ───────────────────────────────────────────
-
-		// Panel opened/closed (workbench, cooking, sail …)
+		// track whether there is a panel open
 		events.subscribe(PanelOpenedEvent.class, new Subscriber<PanelOpenedEvent>() {
 			@Override
 			public void accept(PanelOpenedEvent event) {
@@ -128,16 +81,8 @@ public class GameScreen implements Screen {
 			}
 		});
 
-		// Inventory toggle (E key) — HUDRenderer flips its own boolean;
-		// we mirror it here for cursor/mouselook control.
-		events.subscribe(ToggleInventoryEvent.class, new Subscriber<ToggleInventoryEvent>() {
-			@Override
-			public void accept(ToggleInventoryEvent event) {
-				inventoryOpen = !inventoryOpen;
-				refreshCursor();
-			}
-		});
-
+		// on death, show death screen
+		// pop then push, so that when we go pop from the DeathScreen we go to the MainMenuScreen
 		events.subscribe(PlayerDeathEvent.class, new Subscriber<PlayerDeathEvent>() {
 			@Override
 			public void accept(PlayerDeathEvent event) {
@@ -148,6 +93,7 @@ public class GameScreen implements Screen {
 			}
 		});
 
+		// on win, show win screen, same as death screen
 		events.subscribe(WinEvent.class, new Subscriber<WinEvent>() {
 			@Override
 			public void accept(WinEvent event) {
@@ -159,21 +105,15 @@ public class GameScreen implements Screen {
 		});
 	}
 
-	/**
-	 * Syncs cursor-caught state and mouse-look enable with panel/inventory flags.
-	 * Mouse-look is active only when the cursor is caught.
-	 */
 	private void refreshCursor() {
-		boolean uiOpen = panelOpen || inventoryOpen;
+		boolean uiOpen = panelOpen; // there could be other ui's in the future
 		Gdx.input.setCursorCatched(!uiOpen);
 		playerController.setMouseLookActive(!uiOpen);
 	}
 
-	// ── Screen lifecycle ──────────────────────────────────────────────────────
-
 	@Override
 	public void show() {
-		events.post(new PanelOpenedEvent(new GreetingPanel()));
+		events.post(new PanelOpenedEvent(new GreetingPanel())); // show greeting panel at the start of game
 		Gdx.input.setInputProcessor(inputMultiplexer);
 		refreshCursor();
 	}

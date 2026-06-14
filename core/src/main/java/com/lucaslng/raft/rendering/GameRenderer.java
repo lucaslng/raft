@@ -18,6 +18,7 @@ import com.lucaslng.raft.rendering.hud.HUDRenderer;
 import com.lucaslng.raft.settings.Settings;
 import com.lucaslng.raft.world.World;
 
+// Orchestrates all the rendering in the game
 public class GameRenderer implements Disposable {
 
 	private final Environment environment = new Environment();
@@ -58,6 +59,8 @@ public class GameRenderer implements Disposable {
 				Gdx.graphics.getBackBufferHeight());
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
+		winWall.update(delta);
+
 		float daylight = MathUtils.sin(world.getTime() * MathUtils.PI2 - MathUtils.PI / 2f);
 		daylight = MathUtils.clamp((daylight + 1f) * 0.5f, 0f, 1f);
 		daylight = (float) Math.pow(daylight, 3f);
@@ -67,7 +70,7 @@ public class GameRenderer implements Disposable {
 		skybox.render(camera, daylight);
 		ocean.render(camera, delta);
 
-		// ── Collect opaque instances ──────────────────────────────────────
+		// collect opaque modelinstances
 		opaque.clear();
 		opaque.addAll(world.getEntitySystem().getInstances());
 		opaque.addAll(world.getRaftSystem().getInstances());
@@ -82,20 +85,19 @@ public class GameRenderer implements Disposable {
 		winWall.render(modelBatch, environment);
 		modelBatch.end();
 
-		// ── Hovered entity outline ────────────────────────────────────────
+		// render outline for hovered entity
 		ModelInstance outlineTarget = world.getHoveredOutlineInstance();
 		if (outlineTarget != null) {
 			renderOutline(camera, outlineTarget);
 		}
 
-		// ── Debug draw ────────────────────────────────────────────────────
+		// debug
 		if (Settings.get().debug) {
 			debugDraw.begin(camera);
 			world.getPhysics().debugDrawWorld();
 			debugDraw.end();
 		}
 
-		// ── Underwater tint ───────────────────────────────────────────────
 		underwaterRenderer.renderIfSubmerged(camera.position.y);
 
 		hud.render(delta);
@@ -119,10 +121,9 @@ public class GameRenderer implements Disposable {
 		modelBatch.dispose();
 	}
 
-	// ── Private helpers ───────────────────────────────────────────────────────
-
-	private void renderOutline(Camera camera, ModelInstance mi) {
-		Matrix4 original = new Matrix4(mi.transform);
+	// Render outline on a model instance
+	private void renderOutline(Camera camera, ModelInstance instance) {
+		Matrix4 original = new Matrix4(instance.transform);
 
 		Gdx.gl.glEnable(GL20.GL_STENCIL_TEST);
 		Gdx.gl.glStencilFunc(GL20.GL_ALWAYS, 1, 0xFF);
@@ -131,7 +132,7 @@ public class GameRenderer implements Disposable {
 		Gdx.gl.glClear(GL20.GL_STENCIL_BUFFER_BIT);
 
 		modelBatch.begin(camera);
-		modelBatch.render(mi, environment);
+		modelBatch.render(instance, environment);
 		modelBatch.end();
 
 		Gdx.gl.glStencilFunc(GL20.GL_NOTEQUAL, 1, 0xFF);
@@ -139,12 +140,12 @@ public class GameRenderer implements Disposable {
 		Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
 
 		try {
-			mi.transform.scale(1.03f, 1.03f, 1.03f);
+			instance.transform.scale(1.03f, 1.03f, 1.03f);
 			outlineModelBatch.begin(camera);
-			outlineModelBatch.render(mi, outlineEnvironment);
+			outlineModelBatch.render(instance, outlineEnvironment);
 			outlineModelBatch.end();
 		} finally {
-			mi.transform.set(original);
+			instance.transform.set(original);
 		}
 
 		Gdx.gl.glStencilMask(0xFF);

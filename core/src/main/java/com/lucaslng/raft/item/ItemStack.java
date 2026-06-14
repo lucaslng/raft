@@ -1,5 +1,7 @@
 package com.lucaslng.raft.item;
 
+
+// Immutable pair of item type and quantity (must be positive)
 public class ItemStack {
 	
 	public final Item item;

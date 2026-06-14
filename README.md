@@ -1,6 +1,15 @@
 # Raft
 
-The game is about
+Raft is a 3D first-person survival game built with libGDX in which the player is stranded on a small wooden raft in a vast, endlessly drifting ocean. The player must collect floating trash to expand their raft. The player can craft essential buildings such as water filters, cooking pots, and farms, and manage their health, hunger, and thirst to stay alive. A shark lurks beneath the raft and attacks whenever the player falls into the water, adding danger to any attempts to swim out and collect items. The ultimate goal is to craft and place a sail, steer the raft northward through the waves, and reach a distant safe haven 5,000 units north before the player's stats run out.
+
+## Quickstart
+
+Run using `./gradlew lwjgl3:run` or `gradlew.bat lwjgl3:run`
+Build jar using `./gradlew lwjgl3:jar` or `gradlew.bat lwjgl3:jar`
+
+## Known Bugs
+
+- Swimming is a little bit finicky
 
 ## Gradle
 

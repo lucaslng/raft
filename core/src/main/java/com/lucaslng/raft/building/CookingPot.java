@@ -18,6 +18,8 @@ import com.lucaslng.raft.physics.MotionState;
 import com.lucaslng.raft.rendering.hud.CookingPanel;
 import com.lucaslng.raft.util.Util;
 
+// Building that accepts food items (currently only cauliflower), and cooks them over time.
+// Player can then consume when food is cooked
 public class CookingPot extends Building {
 
 	public static final float COOK_TIME = 10f;
@@ -55,7 +57,7 @@ public class CookingPot extends Building {
 
 	public void cook(Item item) {
 		if (!isCookable(item))
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("Item not cookable.");
 
 		currentItem = item;
 		timer = 0f;
