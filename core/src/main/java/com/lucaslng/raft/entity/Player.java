@@ -2,6 +2,7 @@ package com.lucaslng.raft.entity;
 
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.model.Animation;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
@@ -84,3 +85,30 @@ public class Player extends Entity {
 		return "";
 	}
 }
+
+/*
+idle
+walk
+sprint
+jump
+fall
+crouch
+sit
+drive
+die
+pick-up
+emote-yes
+emote-no
+holding-right
+holding-left
+holding-both
+holding-right-shoot
+holding-left-shoot
+holding-both-shoot
+attack-melee-right
+attack-melee-left
+attack-kick-right
+attack-kick-left
+interact-right
+interact-left
+*/
