@@ -16,7 +16,7 @@ public class GreetingPanel implements Panel {
 		Label title = new Label("Journal", skin, "title");
 		table.add(title).padBottom(20f).row();
 
-		Label label = new Label("A great flood has covered the whole world in water. All I have now is my raft and this old workbench.\n\nI recall a safe haven somewhere up north. Maybe I should try to find it...", skin);
+		Label label = new Label("A great flood has covered the whole world in water. All I have now is my raft and this old workbench. I should place my workbench down so I can craft things.\n\nI recall a safe haven somewhere up north. Maybe I should try to find it...", skin);
 		label.setWrap(true);
 		table.add(label).center().growX().padLeft(100f).padRight(100f).row();
 

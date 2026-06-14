@@ -2,6 +2,7 @@ package com.lucaslng.raft.event;
 
 import java.util.*;
 
+// EventBus
 public class EventBus {
 
 	private final Map<Class<? extends Event>, List<Subscriber<Event>>> subscribers = new HashMap<>();
@@ -19,10 +20,10 @@ public class EventBus {
 				.add((Subscriber<Event>) subscriber);
 	}
 
+	@SuppressWarnings("unchecked")
 	public void post(Event event) {
 		List<Subscriber<Event>> list = subscribers.get(event.getClass());
 		if (list == null || list.isEmpty()) return;
-		// Snapshot so mid-dispatch subscriptions don't cause CME.
 		Subscriber<Event>[] snapshot = list.toArray(new Subscriber[0]);
 		for (Subscriber<Event> s : snapshot) {
 			s.accept(event);

@@ -59,7 +59,7 @@ public class LoadingScreen implements Screen {
 	@Override
 	public void render(float delta) {
 		if (assets.update()) {
-			screenManager.replace(new DeathScreen());
+			screenManager.replace(new MainMenuScreen());
 		}
 
 		progressBar.setValue(assets.getProgress());

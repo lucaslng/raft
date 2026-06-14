@@ -2,6 +2,7 @@ package com.lucaslng.raft.rendering.hud;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -48,7 +49,6 @@ public class HUDRenderer implements Disposable {
 	private final Skin skin;
 
 	private final Stage stage;
-	private final Label fpsLabel;
 	private final Label hintLabel;
 	private final List<Disposable> disposables = new ArrayList<>();
 
@@ -57,7 +57,6 @@ public class HUDRenderer implements Disposable {
 	private final Table panelTable;
 	private final Table hotbarTable;
 	private final Table inventoryTable;
-	private boolean isInventoryOpen = false;
 
 	private final World world;
 
@@ -79,7 +78,7 @@ public class HUDRenderer implements Disposable {
 		disposables.add(stage);
 
 		// ── FPS label ─────────────────────────────────────────────────────
-		fpsLabel = new Label("", skin);
+		Label fpsLabel = new Label("", skin);
 		fpsLabel.addAction(new Action() {
 			@Override
 			public boolean act(float delta) {
@@ -87,7 +86,10 @@ public class HUDRenderer implements Disposable {
 				return false;
 			}
 		});
-		stage.addActor(new Container<>(fpsLabel).top().left().padLeft(10f).padTop(50f));
+		Container<Label> fpsContainer = new Container<>(fpsLabel);
+		fpsContainer.setFillParent(true);
+		fpsContainer.top().right().pad(10);
+		stage.addActor(fpsContainer);
 
 		// ── Crosshair ──────────────────────────────────────────────────────
 		Container<Image> crosshair = new Container<>(
@@ -118,10 +120,13 @@ public class HUDRenderer implements Disposable {
 
 		Table statTable = new Table();
 		statTable.setFillParent(true);
-		statTable.defaults().width(300).height(60).padBottom(4).left();
-		statTable.add(healthBar).row();
-		statTable.add(hungerBar).row();
-		statTable.add(thirstBar);
+		statTable.defaults().height(60f).padBottom(4f).left();
+		statTable.add(new Label("Health", skin)).width(150f);
+		statTable.add(healthBar).width(300f).row();
+		statTable.add(new Label("Hunger", skin)).width(150);
+		statTable.add(hungerBar).width(300f).row();
+		statTable.add(new Label("Thirst", skin)).width(150);
+		statTable.add(thirstBar).width(300f);
 		statTable.bottom().left().pad(16);
 		stage.addActor(statTable);
 
@@ -134,14 +139,7 @@ public class HUDRenderer implements Disposable {
 		// ── Inventory ─────────────────────────────────────────────────────
 		inventoryTable.setFillParent(true);
 		inventoryTable.top().left().pad(14f);
-		inventoryTable.setVisible(false);
 		stage.addActor(inventoryTable);
-
-		events.subscribe(ToggleInventoryEvent.class, event -> {
-			isInventoryOpen = !isInventoryOpen;
-			Gdx.input.setCursorCatched(!isInventoryOpen);
-			inventoryTable.setVisible(isInventoryOpen);
-		});
 
 		// Panels
 		panelTable.setVisible(false);
@@ -214,12 +212,10 @@ public class HUDRenderer implements Disposable {
 		}
 
 		// ── Inventory list ─────────────────────────────────────────────────
-		if (isInventoryOpen) {
-			inventoryTable.clear();
-			for (java.util.Map.Entry<Item, Integer> entry : world.getPlayer().getBackpack().getSortedBackpackView()) {
-				inventoryTable.add(
-						new Label(entry.getKey().name + " x" + entry.getValue(), skin)).row();
-			}
+		inventoryTable.clear();
+		for (Entry<Item, Integer> entry : world.getPlayer().getBackpack().getSortedBackpackView()) {
+			inventoryTable.add(
+					new Label(entry.getKey().name + " x" + entry.getValue(), skin)).row();
 		}
 
 		stage.act(delta);
