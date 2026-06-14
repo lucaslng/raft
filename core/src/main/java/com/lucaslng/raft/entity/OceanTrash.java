@@ -26,15 +26,22 @@ public class OceanTrash extends Entity implements Outlineable {
 	private final btConvexHullShape shape; // kept for disposal
 	private final MotionState motionState; // kept for disposal
 	private final String hint = "[LMB] Collect trash";
-	private final Player player;
-	private final Vector2 noiseDir = new Vector2();
+	private final Vector2 moveDir = new Vector2();
 
 	public OceanTrash(Model model, Vector2 position, Vector2 windDir, Player player) {
 		super(new ModelInstance(model));
 		this.windDir = windDir;
-		this.player = player;
-		float angle = (float) (Math.random() * Math.PI * 2.0);
-		noiseDir.set(MathUtils.cos(angle), MathUtils.sin(angle)).scl(RANDOMNESS);
+
+		Vector3 myPos = getPosition();
+		Vector3 playerPos = player.getPosition();
+
+		moveDir.set(
+				playerPos.x - myPos.x,
+				playerPos.z - myPos.z).nor();
+
+		// Add angular noise
+		float angleOffset = MathUtils.random(-RANDOMNESS, RANDOMNESS);
+		moveDir.rotateRad(angleOffset);
 
 		transform.setToTranslation(position.x, .2f, position.y);
 
@@ -50,19 +57,8 @@ public class OceanTrash extends Entity implements Outlineable {
 
 	@Override
 	public void update(float delta) {
-		float speed = delta;
-		transform.translate(windDir.x * speed, 0f, windDir.y * speed);
-		Vector3 myPos = getPosition();
-		Vector3 dir = player.getPosition().sub(myPos);
-		dir.y = 0; // ignore height, trash floats on surface
-		dir.x += noiseDir.x;
-		dir.z += noiseDir.y;
-
-		if (dir.len2() < 0.001f)
-			return; // already at player, avoid zero vector
-
-		dir.nor().scl(TRASH_SPEED * delta);
-		transform.translate(dir.x, dir.y, dir.z);
+		transform.translate(windDir.x * delta, 0f, windDir.y * delta);
+		transform.translate(moveDir.x * TRASH_SPEED * delta, 0f, moveDir.y * TRASH_SPEED * delta);
 	}
 
 	@Override
@@ -75,11 +71,6 @@ public class OceanTrash extends Entity implements Outlineable {
 		events.post(new TrashCollectedEvent(this));
 	}
 
-	/**
-	 * Disposes the rigid body, the collision shape, and the motion state.
-	 * Previously only {@code body} was disposed, leaking the shape and motion
-	 * state.
-	 */
 	@Override
 	public void dispose() {
 		body.dispose();

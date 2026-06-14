@@ -16,43 +16,10 @@ import com.lucaslng.raft.building.Building;
 import com.lucaslng.raft.physics.MotionState;
 import com.lucaslng.raft.world.Outlineable;
 
-/**
- * One grid cell of the raft.
- *
- * <h3>Coordinate spaces</h3>
- * <ul>
- * <li>{@link #coord} — local grid coordinate (integer-like, e.g. (0,0),
- * (1,0)).</li>
- * <li>World position — {@code raftOrigin + coord}, updated by
- * {@link #setWorldPosition(Vector2)} when the raft drifts.</li>
- * </ul>
- *
- * <h3>Physics body</h3>
- * <p>
- * The tile body is <strong>kinematic</strong> (mass 0 +
- * {@code CF_KINEMATIC_OBJECT} + {@code DISABLE_DEACTIVATION}).
- *
- * <p>
- * Why kinematic and not static? A static body's transform is set <em>once</em>
- * at construction and Bullet never re-reads it from the MotionState. Kinematic
- * bodies call {@link MotionState#getWorldTransform} every physics sub-step so
- * the collision shape follows the drifting tile.
- *
- * <p>
- * Why {@code DISABLE_DEACTIVATION}? Without it Bullet deactivates the body
- * after it stops "moving" (from Bullet's perspective the kinematic body has no
- * velocity), and stops calling {@code getWorldTransform} — the hitbox freezes.
- *
- * <p>
- * {@link #setWorldPosition(Vector2)} also calls
- * {@link btRigidBody#setWorldTransform} directly so the broadphase AABB is
- * refreshed immediately, making raycasts reliable on the same frame as a drift
- * update (Bullet only pumps MotionState transforms during
- * {@code stepSimulation}, not during {@code rayTest}).
- */
+// One grid cell for raft
 public class RaftTile implements Disposable, Outlineable {
 
-	/** Local grid coordinate within the raft. Never changes after construction. */
+	// local grid coordinates within raft
 	public final Vector2 coord;
 
 	private final ModelInstance model;
@@ -61,9 +28,10 @@ public class RaftTile implements Disposable, Outlineable {
 	private final MotionState motionState;
 	private final Vector3 dims;
 
-	/** Scratch matrix reused by setWorldPosition to avoid per-frame allocation. */
+	// temp matrix
 	private final Matrix4 scratchTransform = new Matrix4();
 
+	// optional building
 	private Building building;
 
 	public RaftTile(Vector2 localCoord, Vector2 worldCoord, Model tileModel) {
@@ -76,7 +44,7 @@ public class RaftTile implements Disposable, Outlineable {
 		model.calculateBoundingBox(bb);
 		dims = new Vector3();
 		bb.getDimensions(dims);
-		dims.scl(0.5f); // convert to half-extents for Bullet
+		dims.scl(0.5f);
 
 		motionState = new MotionState(model.transform, dims.y);
 		shape = new btBoxShape(dims);
@@ -85,43 +53,17 @@ public class RaftTile implements Disposable, Outlineable {
 		body = new btRigidBody(info);
 		info.dispose();
 
-		// ── Kinematic setup ──────────────────────────────────────────────
-		// CF_KINEMATIC_OBJECT tells Bullet this body is moved by application
-		// code via the MotionState, not by forces.
 		body.setCollisionFlags(
 				body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT);
 
-		// DISABLE_DEACTIVATION prevents Bullet from putting the body to sleep
-		// (after which it stops polling getWorldTransform on the MotionState).
 		body.setActivationState(Collision.DISABLE_DEACTIVATION);
 
 		body.userData = this;
 	}
 
-	/**
-	 * Moves the tile to a new world position after a raft drift step.
-	 *
-	 * <p>
-	 * Two things must happen for the physics body to follow:
-	 * </p>
-	 * <ol>
-	 * <li><b>Visual transform</b> — {@code model.transform} is updated so
-	 * the rendered mesh is in the right place. {@link MotionState} wraps
-	 * this matrix, so the next {@code stepSimulation} will pull the
-	 * correct transform out of it.</li>
-	 * <li><b>Immediate body transform</b> — {@link btRigidBody#setWorldTransform}
-	 * is called directly so the broadphase AABB updates on the same frame.
-	 * Without this, raycasts fired before the next {@code stepSimulation}
-	 * still hit the old position.</li>
-	 * </ol>
-	 */
 	public void setWorldPosition(Vector2 worldCoord) {
-		// 1. Update the visual / MotionState transform.
 		model.transform.setToTranslation(worldCoord.x, 0f, worldCoord.y);
 
-		// 2. Push the new transform directly into the Bullet body.
-		// MotionState.getWorldTransform offsets by HALF_HEIGHT, so we
-		// replicate that here so the physics shape stays centred on the mesh.
 		scratchTransform.set(model.transform);
 		scratchTransform.val[Matrix4.M13] += dims.y; // add HALF_HEIGHT offset
 		body.setWorldTransform(scratchTransform);
@@ -150,7 +92,7 @@ public class RaftTile implements Disposable, Outlineable {
 		return building;
 	}
 
-	/** Places a building on this tile, disposing any previous one. */
+	// Places a building on this tile, disposes any previous one
 	public void setBuilding(Building b) {
 		if (building != null)
 			building.dispose();

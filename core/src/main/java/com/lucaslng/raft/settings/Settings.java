@@ -15,7 +15,7 @@ public class Settings {
 
 	public float fov = 60f;
 	public boolean debug = true;
-	public boolean cheats = false;
+	public boolean cheats = true;
 	public float masterVolume = .8f;
 	public float mouseSensitivity = .2f;
 
