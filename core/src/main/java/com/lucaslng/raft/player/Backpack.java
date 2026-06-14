@@ -7,6 +7,7 @@ import com.lucaslng.raft.event.EventBus;
 import com.lucaslng.raft.event.events.ItemCollectedEvent;
 import com.lucaslng.raft.item.*;
 
+// Stores stackable items for player
 public class Backpack {
 
 	private final Map<String, Integer> counts = new HashMap<>();
@@ -28,6 +29,8 @@ public class Backpack {
 		return counts.getOrDefault(itemName, 0);
 	}
 
+	// Deplete a certain amount of an item
+	// Returns the actaul amount removed (if not enough)
 	public int consume(String itemName, int quantity) {
 		int have = counts.getOrDefault(itemName, 0);
 		int toRemove = Math.min(have, quantity);
